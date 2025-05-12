@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "wdo/9mKr/tY=",
+  "success": true,
+  "projectFilePath": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.Core\\DesinstalaPhotoshop.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Franklin\\.nuget\\packages\\system.codedom\\9.0.4\\system.codedom.9.0.4.nupkg.sha512",
+    "C:\\Users\\Franklin\\.nuget\\packages\\system.diagnostics.eventlog\\8.0.0\\system.diagnostics.eventlog.8.0.0.nupkg.sha512",
+    "C:\\Users\\Franklin\\.nuget\\packages\\system.management\\9.0.4\\system.management.9.0.4.nupkg.sha512",
+    "C:\\Users\\Franklin\\.nuget\\packages\\system.serviceprocess.servicecontroller\\8.0.0\\system.serviceprocess.servicecontroller.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
