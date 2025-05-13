@@ -1,3 +1,23 @@
+# Archivos y carpetas generados por Visual Studio
+.vs/
+[Bb]in/
+[Oo]bj/
+
+# Archivos de usuario
+*.user
+*.userosscache
+*.suo
+
+# Archivos de caché de NuGet
+*.nuget.props
+*.nuget.targets
+
+# Archivos de compilación
+*.dll
+*.exe
+*.pdb
+
+# Archivos específicos del proyecto
 PlanDesarrollo.md
 memory-bank/
 ManualDesarrollo/
