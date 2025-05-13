@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using System.Security.Principal;
+using System.Linq;
 using CustomMsgBoxLibrary;
 using CustomMsgBoxLibrary.Types;
+using DesinstalaPhotoshop.Core.Models;
 
 namespace DesinstalaPhotoshop.UI
 {
@@ -127,26 +129,53 @@ namespace DesinstalaPhotoshop.UI
 
         private async void BtnDetect_Click(object sender, EventArgs e)
         {
-            // Implementación pendiente - Esta operación requiere permisos elevados
+            // Esta operación requiere permisos elevados
             LogInfo("Detectando instalaciones de Photoshop...");
 
-            // Actualizar información de progreso para demostración
+            // Actualizar información de progreso inicial
             UpdateInfoProgress(0, 5);
 
-            // Ejemplo de uso del método RunOperationAsync con requiresElevation=true
-            await RunOperationAsync<bool>(
+            // Usar el método RunOperationAsync con requiresElevation=true
+            await RunOperationAsync<List<PhotoshopInstallation>>(
                 async (progress, token) =>
                 {
-                    // Simulación de operación con actualización de progreso
-                    for (int i = 1; i <= 5; i++)
+                    try
                     {
-                        await Task.Delay(1000, token);
-                        UpdateInfoProgress(i, 5);
-                        LogInfo($"Paso {i} de 5 completado");
+                        // Crear una instancia del servicio de detección
+                        var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
+                        var detectionService = new DesinstalaPhotoshop.Core.Services.DetectionService(loggingService);
+                        
+                        // Crear un objeto de progreso para pasar al servicio
+                        var progressReporter = new Progress<DesinstalaPhotoshop.Core.Models.ProgressInfo>(info => {
+                            // Actualizar la UI con la información de progreso
+                            {
+                                progress.Report(info.ProgressPercentage);
+                                UpdateInfoProgress((int)(info.ProgressPercentage / 20), 5); // Convertir porcentaje a pasos
+                            }
+                            
+                            if (!string.IsNullOrEmpty(info.StatusMessage))
+                            {
+                                LogInfo(info.StatusMessage);
+                            }
+                        });
+                        
+                        // Ejecutar la detección
+                        var installations = await detectionService.DetectInstallationsAsync(progressReporter, token);
+                        
+                        // Actualizar la lista de instalaciones detectadas
+                        _detectedInstallations = new List<object>(installations.Cast<object>().ToList());
+                        
+                        // Actualizar la UI con las instalaciones detectadas
+                        UpdateInstallationsList();
+                        
+                        LogSuccess($"Detección completada con éxito. Se encontraron {installations.Count} instalaciones.");
+                        return installations;
                     }
-
-                    LogSuccess("Detección completada con éxito.");
-                    return true;
+                    catch (Exception ex)
+                    {
+                        LogError($"Error durante la detección: {ex.Message}");
+                        throw;
+                    }
                 },
                 "Detectando instalaciones",
                 requiresElevation: true);
@@ -588,6 +617,51 @@ namespace DesinstalaPhotoshop.UI
             {
                 progressBar.Value = 0;
             }
+        }
+
+        /// <summary>
+        /// Actualiza la lista de instalaciones detectadas en la UI
+        /// </summary>
+        private void UpdateInstallationsList()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(UpdateInstallationsList));
+                return;
+            }
+
+            // Limpiar la lista actual
+            lstInstallations.Items.Clear();
+
+            // Si no hay instalaciones, salir
+            if (_detectedInstallations == null || _detectedInstallations.Count == 0)
+            {
+                LogInfo("No se encontraron instalaciones de Photoshop.");
+                return;
+            }
+
+            // Agregar cada instalación a la lista
+            foreach (var obj in _detectedInstallations)
+            {
+                if (obj is DesinstalaPhotoshop.Core.Models.PhotoshopInstallation installation)
+                {
+                    // Crear un ListViewItem con la información principal
+                    var item = new ListViewItem(installation.DisplayName);
+                    item.SubItems.Add(installation.Version);
+                    item.SubItems.Add(installation.InstallLocation);
+                    item.SubItems.Add(installation.Type.ToString());
+                    item.SubItems.Add(installation.ConfidenceScore.ToString() + "%");
+                    
+                    // Guardar la referencia a la instalación en el Tag para acceso posterior
+                    item.Tag = installation;
+                    
+                    // Agregar el item a la lista
+                    lstInstallations.Items.Add(item);
+                }
+            }
+
+            // Actualizar el estado de los botones
+            UpdateButtonsState();
         }
 
         /// <summary>
