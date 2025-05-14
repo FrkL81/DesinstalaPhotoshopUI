@@ -24,10 +24,28 @@ public interface IBackupService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Crea una copia de seguridad de una instalación de Photoshop.
+    /// </summary>
+    /// <param name="installation">Instalación de la que se creará la copia de seguridad.</param>
+    /// <param name="progress">Objeto para reportar el progreso de la operación.</param>
+    /// <param name="cancellationToken">Token para cancelar la operación.</param>
+    /// <returns>Resultado de la operación.</returns>
+    Task<OperationResult> CreateBackupAsync(
+        PhotoshopInstallation installation,
+        IProgress<ProgressInfo>? progress = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Obtiene una lista de las copias de seguridad disponibles.
     /// </summary>
     /// <returns>Lista de metadatos de las copias de seguridad disponibles.</returns>
     List<BackupMetadata> GetAvailableBackups();
+
+    /// <summary>
+    /// Obtiene una lista de copias de seguridad disponibles.
+    /// </summary>
+    /// <returns>Lista de metadatos de copias de seguridad.</returns>
+    Task<List<BackupMetadata>> GetBackupsAsync();
 
     /// <summary>
     /// Restaura una copia de seguridad.
@@ -35,9 +53,16 @@ public interface IBackupService
     /// <param name="backupId">Identificador de la copia de seguridad a restaurar.</param>
     /// <param name="progress">Objeto para reportar el progreso de la operación.</param>
     /// <param name="cancellationToken">Token para cancelar la operación.</param>
-    /// <returns>True si la restauración fue exitosa, false en caso contrario.</returns>
-    Task<bool> RestoreBackupAsync(
+    /// <returns>Resultado de la operación.</returns>
+    Task<OperationResult> RestoreBackupAsync(
         string backupId,
         IProgress<ProgressInfo>? progress = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Elimina una copia de seguridad.
+    /// </summary>
+    /// <param name="backupId">Identificador de la copia de seguridad a eliminar.</param>
+    /// <returns>Resultado de la operación.</returns>
+    Task<OperationResult> DeleteBackupAsync(string backupId);
 }

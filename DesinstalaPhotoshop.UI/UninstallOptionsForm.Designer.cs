@@ -31,12 +31,15 @@ namespace DesinstalaPhotoshop.UI
             lblTitle = new Label();
             chkCreateBackup = new CheckBox();
             chkCleanupAfterUninstall = new CheckBox();
+            chkRemoveUserData = new CheckBox();
+            chkRemoveSharedComponents = new CheckBox();
+            chkWhatIfMode = new CheckBox();
             btnOK = new Button();
             btnCancel = new Button();
             SuspendLayout();
-            // 
+            //
             // lblTitle
-            // 
+            //
             lblTitle.AutoSize = true;
             lblTitle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTitle.ForeColor = Color.White;
@@ -45,9 +48,9 @@ namespace DesinstalaPhotoshop.UI
             lblTitle.Size = new Size(222, 21);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Opciones de desinstalación:";
-            // 
+            //
             // chkCreateBackup
-            // 
+            //
             chkCreateBackup.AutoSize = true;
             chkCreateBackup.Checked = true;
             chkCreateBackup.CheckState = CheckState.Checked;
@@ -59,9 +62,9 @@ namespace DesinstalaPhotoshop.UI
             chkCreateBackup.Text = "Crear copia de seguridad antes de desinstalar (recomendado)";
             chkCreateBackup.UseVisualStyleBackColor = true;
             chkCreateBackup.CheckedChanged += ChkCreateBackup_CheckedChanged;
-            // 
+            //
             // chkCleanupAfterUninstall
-            // 
+            //
             chkCleanupAfterUninstall.AutoSize = true;
             chkCleanupAfterUninstall.Checked = true;
             chkCleanupAfterUninstall.CheckState = CheckState.Checked;
@@ -73,46 +76,85 @@ namespace DesinstalaPhotoshop.UI
             chkCleanupAfterUninstall.Text = "Limpiar residuos después de la desinstalación (recomendado)";
             chkCleanupAfterUninstall.UseVisualStyleBackColor = true;
             chkCleanupAfterUninstall.CheckedChanged += ChkCleanupAfterUninstall_CheckedChanged;
-            // 
+            //
+            // chkRemoveUserData
+            //
+            chkRemoveUserData.AutoSize = true;
+            chkRemoveUserData.ForeColor = Color.White;
+            chkRemoveUserData.Location = new Point(27, 120);
+            chkRemoveUserData.Name = "chkRemoveUserData";
+            chkRemoveUserData.Size = new Size(300, 19);
+            chkRemoveUserData.TabIndex = 3;
+            chkRemoveUserData.Text = "Eliminar datos de usuario (preferencias, presets, etc.)";
+            chkRemoveUserData.UseVisualStyleBackColor = true;
+            chkRemoveUserData.CheckedChanged += ChkRemoveUserData_CheckedChanged;
+            //
+            // chkRemoveSharedComponents
+            //
+            chkRemoveSharedComponents.AutoSize = true;
+            chkRemoveSharedComponents.ForeColor = Color.White;
+            chkRemoveSharedComponents.Location = new Point(27, 150);
+            chkRemoveSharedComponents.Name = "chkRemoveSharedComponents";
+            chkRemoveSharedComponents.Size = new Size(350, 19);
+            chkRemoveSharedComponents.TabIndex = 4;
+            chkRemoveSharedComponents.Text = "Eliminar componentes compartidos (puede afectar otras apps)";
+            chkRemoveSharedComponents.UseVisualStyleBackColor = true;
+            chkRemoveSharedComponents.CheckedChanged += ChkRemoveSharedComponents_CheckedChanged;
+            //
+            // chkWhatIfMode
+            //
+            chkWhatIfMode.AutoSize = true;
+            chkWhatIfMode.ForeColor = Color.White;
+            chkWhatIfMode.Location = new Point(27, 180);
+            chkWhatIfMode.Name = "chkWhatIfMode";
+            chkWhatIfMode.Size = new Size(350, 19);
+            chkWhatIfMode.TabIndex = 5;
+            chkWhatIfMode.Text = "Modo de simulación (no realizar cambios reales)";
+            chkWhatIfMode.UseVisualStyleBackColor = true;
+            chkWhatIfMode.CheckedChanged += ChkWhatIfMode_CheckedChanged;
+            //
             // btnOK
-            // 
+            //
             btnOK.BackColor = Color.FromArgb(30, 40, 60);
             btnOK.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnOK.FlatStyle = FlatStyle.Flat;
             btnOK.ForeColor = Color.White;
-            btnOK.Location = new Point(100, 148);
+            btnOK.Location = new Point(100, 220);
             btnOK.Name = "btnOK";
             btnOK.Size = new Size(90, 30);
-            btnOK.TabIndex = 3;
+            btnOK.TabIndex = 6;
             btnOK.Text = "Aceptar";
             btnOK.UseVisualStyleBackColor = false;
             btnOK.Click += BtnOK_Click;
-            // 
+            //
             // btnCancel
-            // 
+            //
             btnCancel.BackColor = Color.FromArgb(30, 40, 60);
             btnCancel.DialogResult = DialogResult.Cancel;
             btnCancel.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.ForeColor = Color.White;
-            btnCancel.Location = new Point(210, 148);
+            btnCancel.Location = new Point(210, 220);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(90, 30);
-            btnCancel.TabIndex = 4;
+            btnCancel.TabIndex = 7;
             btnCancel.Text = "Cancelar";
             btnCancel.UseVisualStyleBackColor = false;
             btnCancel.Click += BtnCancel_Click;
-            // 
+            //
             // UninstallOptionsForm
-            // 
+            //
             AcceptButton = btnOK;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 30, 45);
             CancelButton = btnCancel;
-            ClientSize = new Size(400, 200);
+            ClientSize = new Size(400, 270);
             Controls.Add(btnCancel);
             Controls.Add(btnOK);
+            Controls.Add(chkWhatIfMode);
+            Controls.Add(chkRemoveSharedComponents);
+            Controls.Add(chkRemoveUserData);
             Controls.Add(chkCleanupAfterUninstall);
             Controls.Add(chkCreateBackup);
             Controls.Add(lblTitle);
@@ -131,6 +173,9 @@ namespace DesinstalaPhotoshop.UI
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.CheckBox chkCreateBackup;
         private System.Windows.Forms.CheckBox chkCleanupAfterUninstall;
+        private System.Windows.Forms.CheckBox chkRemoveUserData;
+        private System.Windows.Forms.CheckBox chkRemoveSharedComponents;
+        private System.Windows.Forms.CheckBox chkWhatIfMode;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
     }

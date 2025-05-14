@@ -21,6 +21,11 @@ public class OperationResult
     public string? ErrorMessage { get; set; }
 
     /// <summary>
+    /// Obtiene o establece el mensaje de la operación.
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
     /// Obtiene o establece el identificador de la copia de seguridad creada durante la operación.
     /// </summary>
     public string? BackupId { get; set; }
@@ -37,6 +42,25 @@ public class OperationResult
             Success = true,
             IsCanceled = false,
             ErrorMessage = null,
+            Message = "Operación completada con éxito.",
+            BackupId = backupId
+        };
+    }
+
+    /// <summary>
+    /// Crea un resultado de operación exitosa con un mensaje personalizado.
+    /// </summary>
+    /// <param name="message">Mensaje de éxito.</param>
+    /// <param name="backupId">Identificador de la copia de seguridad creada durante la operación.</param>
+    /// <returns>Resultado de operación exitosa.</returns>
+    public static OperationResult SuccessResult(string message, string? backupId = null)
+    {
+        return new OperationResult
+        {
+            Success = true,
+            IsCanceled = false,
+            ErrorMessage = null,
+            Message = message,
             BackupId = backupId
         };
     }
@@ -53,6 +77,7 @@ public class OperationResult
             Success = false,
             IsCanceled = false,
             ErrorMessage = errorMessage,
+            Message = errorMessage,
             BackupId = null
         };
     }
@@ -69,6 +94,7 @@ public class OperationResult
             Success = false,
             IsCanceled = true,
             ErrorMessage = message,
+            Message = message,
             BackupId = null
         };
     }
