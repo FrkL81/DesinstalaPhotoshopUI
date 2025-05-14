@@ -35,7 +35,7 @@ namespace DesinstalaPhotoshop.UI
         private int _totalInfoCount = 0;
 
         // Indica si la aplicación está en modo de desarrollo
-        private bool _developmentMode = true;
+        private bool _developmentMode = false; // Cambiado a false para permitir la detección sin reiniciar
 
         public MainForm()
         {
@@ -142,9 +142,16 @@ namespace DesinstalaPhotoshop.UI
                 {
                     try
                     {
-                        // Crear una instancia del servicio de detección
+                        // Crear instancias de los servicios necesarios
                         var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
-                        var detectionService = new DesinstalaPhotoshop.Core.Services.DetectionService(loggingService);
+                        var registryHelper = new DesinstalaPhotoshop.Core.Services.Helpers.RegistryHelper(loggingService);
+                        var fileSystemHelper = new DesinstalaPhotoshop.Core.Services.Helpers.FileSystemHelper(loggingService);
+
+                        // Crear una instancia del servicio de detección con todos los servicios necesarios
+                        var detectionService = new DesinstalaPhotoshop.Core.Services.DetectionService(
+                            loggingService,
+                            registryHelper,
+                            fileSystemHelper);
 
                         // Crear un objeto de progreso para pasar al servicio
                         var progressReporter = new Progress<DesinstalaPhotoshop.Core.Models.ProgressInfo>(info => {
@@ -160,7 +167,9 @@ namespace DesinstalaPhotoshop.UI
                         });
 
                         // Ejecutar la detección
+                        LogInfo("Iniciando detección de instalaciones...");
                         var installations = await detectionService.DetectInstallationsAsync(progressReporter, token);
+                        LogInfo($"Detección finalizada. Se encontraron {installations.Count} instalaciones.");
 
                         // Actualizar la lista de instalaciones detectadas
                         _detectedInstallations = new List<object>(installations.Cast<object>().ToList());
@@ -174,6 +183,10 @@ namespace DesinstalaPhotoshop.UI
                     catch (Exception ex)
                     {
                         LogError($"Error durante la detección: {ex.Message}");
+                        if (ex.InnerException != null)
+                        {
+                            LogError($"Error interno: {ex.InnerException.Message}");
+                        }
                         throw;
                     }
                 },
@@ -813,6 +826,7 @@ namespace DesinstalaPhotoshop.UI
             {
                 // Preparar la UI para la operación
                 StartProgressAnimation(operationName);
+                LogInfo($"Iniciando operación: {operationName}");
 
                 // Crear un nuevo token de cancelación
                 _cts = new CancellationTokenSource();
@@ -830,7 +844,10 @@ namespace DesinstalaPhotoshop.UI
                 });
 
                 // Ejecutar la operación
-                return await operation(progress, _cts.Token);
+                LogInfo("Ejecutando operación...");
+                var result = await operation(progress, _cts.Token);
+                LogInfo($"Operación {operationName} completada con éxito");
+                return result;
             }
             catch (OperationCanceledException)
             {
@@ -854,9 +871,9 @@ namespace DesinstalaPhotoshop.UI
         /// </summary>
         private bool IsRunningAsAdmin()
         {
-            // En modo de desarrollo, simulamos que no tenemos permisos elevados
+            // En modo de desarrollo, simulamos que tenemos permisos elevados para permitir la detección
             if (_developmentMode)
-                return false;
+                return true;
 
             return AdminHelper.IsRunningAsAdmin();
         }
