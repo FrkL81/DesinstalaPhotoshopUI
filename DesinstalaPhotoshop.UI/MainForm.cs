@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using CustomMsgBoxLibrary;
 using CustomMsgBoxLibrary.Types;
 using DesinstalaPhotoshop.Core.Models;
@@ -107,6 +108,10 @@ namespace DesinstalaPhotoshop.UI
             // Lista de instalaciones
             lstInstallations.SelectedIndexChanged += LstInstallations_SelectedIndexChanged!;
 
+            // Menú contextual del DataGrid
+            menuItemCopyRow.Click += MenuItemCopyRow_Click!;
+            menuItemCopyTable.Click += MenuItemCopyTable_Click!;
+
             // Eventos del formulario para actualizar el layout
             this.Load += MainForm_Load_UpdateLayout!;
             this.Resize += MainForm_Resize_UpdateLayout!;
@@ -133,6 +138,16 @@ namespace DesinstalaPhotoshop.UI
         {
             // Esta operación requiere permisos elevados
             LogInfo("Detectando instalaciones de Photoshop...");
+
+            // Limpiar los controles de progreso de operaciones anteriores
+            // Esto asegura que no se muestren mensajes de operaciones anteriores
+            // Solo ocultamos los controles si no hay una operación en curso al 100%
+            if (progressBar.Value < 100)
+            {
+                lblProgress.Visible = false;
+                progressBar.Visible = false;
+                lblAnimatedText.Visible = false;
+            }
 
             // Actualizar información de progreso inicial
             UpdateInfoProgress(0, 5);
@@ -239,6 +254,15 @@ namespace DesinstalaPhotoshop.UI
                 {
                     LogInfo("Desinstalación cancelada por el usuario.");
                     return;
+                }
+
+                // Limpiar los controles de progreso de operaciones anteriores
+                // Solo ocultamos los controles si no hay una operación en curso al 100%
+                if (progressBar.Value < 100)
+                {
+                    lblProgress.Visible = false;
+                    progressBar.Visible = false;
+                    lblAnimatedText.Visible = false;
                 }
 
                 // Actualizar información de progreso inicial
@@ -361,6 +385,15 @@ namespace DesinstalaPhotoshop.UI
                 {
                     LogInfo("Limpieza cancelada por el usuario.");
                     return;
+                }
+
+                // Limpiar los controles de progreso de operaciones anteriores
+                // Solo ocultamos los controles si no hay una operación en curso al 100%
+                if (progressBar.Value < 100)
+                {
+                    lblProgress.Visible = false;
+                    progressBar.Visible = false;
+                    lblAnimatedText.Visible = false;
                 }
 
                 // Actualizar información de progreso inicial
@@ -646,6 +679,176 @@ namespace DesinstalaPhotoshop.UI
             UpdateButtonsState();
         }
 
+        private void MenuItemCopyRow_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (lstInstallations.SelectedItems.Count == 0)
+                {
+                    CustomMsgBox.Show(
+                        prompt: "No hay ninguna fila seleccionada para copiar.",
+                        title: "Información",
+                        buttons: CustomMessageBoxButtons.OK,
+                        icon: CustomMessageBoxIcon.Information);
+                    return;
+                }
+
+                // Obtener la fila seleccionada
+                ListViewItem selectedItem = lstInstallations.SelectedItems[0];
+
+                // Construir el texto con los valores de las columnas
+                StringBuilder sb = new StringBuilder();
+
+                // Añadir encabezados
+                for (int i = 0; i < lstInstallations.Columns.Count; i++)
+                {
+                    sb.Append(lstInstallations.Columns[i].Text);
+                    if (i < lstInstallations.Columns.Count - 1)
+                        sb.Append("\t");
+                }
+                sb.AppendLine();
+
+                // Añadir valores de la fila
+                for (int i = 0; i < selectedItem.SubItems.Count; i++)
+                {
+                    sb.Append(selectedItem.SubItems[i].Text);
+                    if (i < selectedItem.SubItems.Count - 1)
+                        sb.Append("\t");
+                }
+
+                // Añadir información adicional del tooltip si está disponible
+                if (selectedItem.Tag is PhotoshopInstallation installation)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Información adicional:");
+                    sb.AppendLine($"Tipo de instalación: {installation.InstallationType}");
+                    sb.AppendLine($"Puntuación de confianza: {installation.ConfidenceScore}");
+                    sb.AppendLine($"Método de detección: {installation.DetectedBy}");
+
+                    // Verificar si existe el ejecutable principal
+                    bool hasExecutable = false;
+                    if (!string.IsNullOrEmpty(installation.InstallLocation))
+                    {
+                        string exePath = Path.Combine(installation.InstallLocation, "photoshop.exe");
+                        hasExecutable = File.Exists(exePath);
+                    }
+                    sb.AppendLine($"Ejecutable principal: {(hasExecutable ? "Sí" : "No")}");
+
+                    // Verificar si existe el desinstalador
+                    bool hasUninstaller = false;
+                    if (!string.IsNullOrEmpty(installation.UninstallString))
+                    {
+                        string uninstallerPath = installation.UninstallString.Replace("\"", "").Split(' ')[0];
+                        hasUninstaller = File.Exists(uninstallerPath);
+                    }
+                    sb.AppendLine($"Desinstalador: {(hasUninstaller ? "Sí" : "No")}");
+
+                    // Agregar información sobre claves de registro si existen
+                    if (installation.AssociatedRegistryKeys.Count > 0)
+                    {
+                        sb.AppendLine($"Claves de registro: {installation.AssociatedRegistryKeys.Count}");
+                    }
+
+                    // Agregar información sobre archivos asociados si existen
+                    if (installation.AssociatedFiles.Count > 0)
+                    {
+                        sb.AppendLine($"Archivos asociados: {installation.AssociatedFiles.Count}");
+                    }
+
+                    // Agregar notas si existen
+                    if (!string.IsNullOrEmpty(installation.Notes))
+                    {
+                        sb.AppendLine($"Notas: {installation.Notes}");
+                    }
+                }
+
+                // Copiar al portapapeles
+                Clipboard.SetText(sb.ToString());
+
+                LogInfo("Fila copiada al portapapeles con información detallada.");
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error al copiar la fila: {ex.Message}");
+            }
+        }
+
+        private void MenuItemCopyTable_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (lstInstallations.Items.Count == 0)
+                {
+                    CustomMsgBox.Show(
+                        prompt: "No hay datos en la tabla para copiar.",
+                        title: "Información",
+                        buttons: CustomMessageBoxButtons.OK,
+                        icon: CustomMessageBoxIcon.Information);
+                    return;
+                }
+
+                // Construir el texto con todas las filas y columnas
+                StringBuilder sb = new StringBuilder();
+
+                // Añadir encabezados
+                for (int i = 0; i < lstInstallations.Columns.Count; i++)
+                {
+                    sb.Append(lstInstallations.Columns[i].Text);
+                    if (i < lstInstallations.Columns.Count - 1)
+                        sb.Append("\t");
+                }
+                sb.AppendLine();
+
+                // Añadir todas las filas
+                foreach (ListViewItem item in lstInstallations.Items)
+                {
+                    for (int i = 0; i < item.SubItems.Count; i++)
+                    {
+                        sb.Append(item.SubItems[i].Text);
+                        if (i < item.SubItems.Count - 1)
+                            sb.Append("\t");
+                    }
+                    sb.AppendLine();
+                }
+
+                // Añadir resumen de la detección
+                sb.AppendLine();
+                sb.AppendLine("Resumen de la detección:");
+
+                // Contar instalaciones principales, posibles y residuos
+                int mainCount = 0;
+                int possibleCount = 0;
+                int residualCount = 0;
+
+                foreach (ListViewItem item in lstInstallations.Items)
+                {
+                    if (item.Tag is PhotoshopInstallation installation)
+                    {
+                        if (installation.IsMainInstallation)
+                            mainCount++;
+                        else if (installation.InstallationType == InstallationType.PossibleMainInstallation)
+                            possibleCount++;
+                        else if (installation.IsResidual)
+                            residualCount++;
+                    }
+                }
+
+                sb.AppendLine($"✅ Instalaciones principales: {mainCount}");
+                sb.AppendLine($"⚠️ Posibles instalaciones principales: {possibleCount}");
+                sb.AppendLine($"🗑️ Residuos: {residualCount}");
+                sb.AppendLine($"Total de elementos detectados: {lstInstallations.Items.Count}");
+
+                // Copiar al portapapeles
+                Clipboard.SetText(sb.ToString());
+
+                LogInfo($"Tabla completa copiada al portapapeles ({lstInstallations.Items.Count} filas).");
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error al copiar la tabla: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region Métodos de UI
@@ -658,6 +861,9 @@ namespace DesinstalaPhotoshop.UI
             // Verificar si hay instalaciones residuales detectadas
             bool hasResiduals = false;
 
+            // Verificar si hay instalaciones principales o posibles instalaciones principales
+            bool hasMainOrPossibleInstallation = false;
+
             if (_detectedInstallations != null && _detectedInstallations.Count > 0)
             {
                 foreach (var obj in _detectedInstallations)
@@ -666,6 +872,10 @@ namespace DesinstalaPhotoshop.UI
                     {
                         if (installation.IsResidual)
                             hasResiduals = true;
+
+                        if (installation.IsMainInstallation ||
+                            installation.InstallationType == InstallationType.PossibleMainInstallation)
+                            hasMainOrPossibleInstallation = true;
                     }
                 }
             }
@@ -694,8 +904,8 @@ namespace DesinstalaPhotoshop.UI
             // El botón Desinstalar requiere una selección de instalación principal o posible
             btnUninstall.Enabled = hasSelection && selectedMainInstallation;
 
-            // El botón Limpiar está habilitado si hay residuos detectados
-            btnCleanup.Enabled = hasResiduals;
+            // El botón Limpiar está habilitado si hay residuos detectados Y NO hay instalaciones principales ni posibles
+            btnCleanup.Enabled = hasResiduals && !hasMainOrPossibleInstallation;
 
             // El botón Modo de Prueba siempre está habilitado
             btnTestMode.Enabled = true;
@@ -805,10 +1015,30 @@ namespace DesinstalaPhotoshop.UI
             // Detener animación
             animationTimer.Stop();
 
-            // Ocultar controles de progreso
-            lblProgress.Visible = false;
-            progressBar.Visible = false;
-            lblAnimatedText.Visible = false;
+            // Determinar si debemos mantener visibles los controles de progreso
+            bool operationCompleted = progressBar.Value >= 100;
+
+            if (operationCompleted)
+            {
+                // Si la operación se completó (barra al 100%), mantener visibles los controles
+                // pero actualizar el texto para indicar que la operación ha finalizado
+                lblProgress.Text = $"{_currentOperation} - Completado (100%)";
+
+                // Asegurar que los controles estén visibles
+                lblProgress.Visible = true;
+                progressBar.Visible = true;
+                lblAnimatedText.Visible = true;
+
+                // Cambiar el texto animado a un mensaje de éxito
+                lblAnimatedText.Text = "Operación completada con éxito";
+            }
+            else
+            {
+                // Si la operación no se completó, ocultar los controles de progreso
+                lblProgress.Visible = false;
+                progressBar.Visible = false;
+                lblAnimatedText.Visible = false;
+            }
 
             // Restaurar estado de los botones
             UpdateButtonsState();
@@ -835,6 +1065,11 @@ namespace DesinstalaPhotoshop.UI
 
             progressBar.Value = percentage;
 
+            // Asegurar que los controles de progreso estén visibles
+            lblProgress.Visible = true;
+            progressBar.Visible = true;
+            lblAnimatedText.Visible = true;
+
             // Texto a mostrar (statusText o _currentOperation)
             string displayText = !string.IsNullOrEmpty(statusText) ? statusText : _currentOperation;
 
@@ -847,10 +1082,16 @@ namespace DesinstalaPhotoshop.UI
             // Actualizar el texto de progreso
             lblProgress.Text = $"{displayText} - {percentage}%";
 
-            // Si llegamos al 100%, detener la animación
+            // Si llegamos al 100%, detener la animación y actualizar el texto
             if (percentage >= 100)
             {
                 animationTimer.Stop();
+
+                // Actualizar el texto para indicar que la operación ha finalizado
+                lblProgress.Text = $"{displayText} - Completado (100%)";
+
+                // Cambiar el texto animado a un mensaje de éxito
+                lblAnimatedText.Text = "Operación completada con éxito";
             }
         }
 
@@ -953,6 +1194,14 @@ namespace DesinstalaPhotoshop.UI
             {
                 int percentage = (int)((float)current / total * 100);
                 progressBar.Value = percentage;
+
+                // Si llegamos al 100%, asegurar que los controles permanezcan visibles
+                if (percentage >= 100)
+                {
+                    lblProgress.Visible = true;
+                    progressBar.Visible = true;
+                    lblAnimatedText.Visible = true;
+                }
             }
             else
             {
@@ -1006,28 +1255,178 @@ namespace DesinstalaPhotoshop.UI
                         tooltipText = "Residuos de Photoshop";
                     }
 
-                    // Crear un ListViewItem con la información principal
-                    var item = new ListViewItem(emoji + installation.DisplayName);
-                    item.SubItems.Add(installation.Version);
-                    item.SubItems.Add(installation.InstallLocation);
-                    item.SubItems.Add(installation.InstallationType.ToString());
-                    item.SubItems.Add(installation.ConfidenceScore.ToString() + "%");
+                    // Crear un nombre con información adicional entre paréntesis
+                    string displayName = installation.DisplayName;
+                    string additionalInfo = string.Empty;
+
+                    // Determinar la información adicional según el tipo de instalación
+                    if (!string.IsNullOrEmpty(installation.InstallLocation))
+                    {
+                        // Extraer el nombre de la carpeta de la ruta de instalación
+                        string folderName = Path.GetFileName(installation.InstallLocation.TrimEnd('\\', '/'));
+                        if (!string.IsNullOrEmpty(folderName))
+                        {
+                            additionalInfo = $"Carpeta: {folderName}";
+                        }
+                    }
+                    else if (installation.DetectedBy == DetectionMethod.Registry || installation.AssociatedRegistryKeys.Count > 0)
+                    {
+                        additionalInfo = "Registro";
+                    }
+
+                    // Si es una instalación residual en AppData o Documents, indicarlo
+                    if (installation.IsResidual && installation.InstallLocation != null)
+                    {
+                        if (installation.InstallLocation.Contains("AppData", StringComparison.OrdinalIgnoreCase))
+                        {
+                            additionalInfo = "Residuos en AppData";
+                        }
+                        else if (installation.InstallLocation.Contains("Documents", StringComparison.OrdinalIgnoreCase))
+                        {
+                            additionalInfo = "Residuos en Documents";
+                        }
+                        else if (installation.InstallLocation.Contains("ProgramData", StringComparison.OrdinalIgnoreCase))
+                        {
+                            additionalInfo = "Residuos en ProgramData";
+                        }
+                    }
+
+                    // Añadir la información adicional al nombre si existe
+                    if (!string.IsNullOrEmpty(additionalInfo))
+                    {
+                        displayName = $"{displayName} ({additionalInfo})";
+                    }
+
+                    // Crear el ListViewItem con el nombre completo
+                    var item = new ListViewItem(emoji + displayName);
+
+                    // Versión (mostrar "Unknown" si no está disponible)
+                    string version = !string.IsNullOrEmpty(installation.Version) ? installation.Version : "Unknown";
+                    item.SubItems.Add(version);
+
+                    // Ubicación (mostrar detalles adicionales para tipos especiales)
+                    string location = installation.InstallLocation ?? string.Empty;
+                    if (location.Contains("Common Files", StringComparison.OrdinalIgnoreCase))
+                    {
+                        location = location.Replace("Common Files", "(x86)\\Common Files");
+                    }
+                    item.SubItems.Add(location);
+
+                    // Confianza (mostrar valor numérico y palabra descriptiva)
+                    string confidenceValue = installation.ConfidenceScore.ToString();
+                    // Si es negativo, asegurarse de que se muestre el signo
+                    if (installation.ConfidenceScore <= 0 && !confidenceValue.StartsWith("-"))
+                    {
+                        confidenceValue = "-" + Math.Abs(installation.ConfidenceScore);
+                    }
+
+                    // Determinar la palabra descriptiva según la puntuación
+                    string confidenceWord;
+                    if (installation.ConfidenceScore >= 8)
+                    {
+                        confidenceWord = "Alta";
+                    }
+                    else if (installation.ConfidenceScore >= 5)
+                    {
+                        confidenceWord = "Media";
+                    }
+                    else if (installation.ConfidenceScore >= 1)
+                    {
+                        confidenceWord = "Baja";
+                    }
+                    else if (installation.ConfidenceScore == 0)
+                    {
+                        confidenceWord = "Neutral";
+                    }
+                    else if (installation.ConfidenceScore >= -3)
+                    {
+                        confidenceWord = "Dudosa";
+                    }
+                    else
+                    {
+                        confidenceWord = "Residual";
+                    }
+
+                    // Combinar valor numérico y palabra descriptiva
+                    string confidence = $"{confidenceValue} ({confidenceWord})";
+                    item.SubItems.Add(confidence);
 
                     // Configurar el tooltip con información detallada
                     item.ToolTipText = $"{tooltipText}\n" +
-                                      $"Puntuación de confianza: {installation.ConfidenceScore}%\n" +
-                                      $"Método de detección: {installation.DetectedBy}\n";
+                                      $"Puntuación de confianza: {installation.ConfidenceScore}\n" +
+                                      $"Método de detección: {installation.DetectedBy}\n" +
+                                      $"Tipo de instalación: {installation.InstallationType}\n";
+
+                    // Verificar si existe el ejecutable principal
+                    bool hasExecutable = false;
+                    if (!string.IsNullOrEmpty(installation.InstallLocation))
+                    {
+                        string exePath = Path.Combine(installation.InstallLocation, "photoshop.exe");
+                        hasExecutable = File.Exists(exePath);
+                    }
+
+                    // Verificar si existe el desinstalador
+                    bool hasUninstaller = false;
+                    if (!string.IsNullOrEmpty(installation.UninstallString))
+                    {
+                        string uninstallerPath = installation.UninstallString.Replace("\"", "").Split(' ')[0];
+                        hasUninstaller = File.Exists(uninstallerPath);
+                    }
+
+                    // Agregar estado del ejecutable principal
+                    item.ToolTipText += $"Ejecutable principal: {(hasExecutable ? "✓" : "✗")}\n";
+
+                    // Agregar estado del desinstalador
+                    item.ToolTipText += $"Desinstalador: {(hasUninstaller ? "✓" : "✗")}\n";
 
                     // Agregar información sobre claves de registro si existen
                     if (installation.AssociatedRegistryKeys.Count > 0)
                     {
                         item.ToolTipText += $"Claves de registro: {installation.AssociatedRegistryKeys.Count}\n";
+
+                        // Mostrar hasta 3 claves de registro como ejemplo
+                        int keysToShow = Math.Min(installation.AssociatedRegistryKeys.Count, 3);
+                        for (int i = 0; i < keysToShow; i++)
+                        {
+                            string key = installation.AssociatedRegistryKeys[i];
+                            // Truncar la clave si es muy larga
+                            if (key.Length > 60)
+                            {
+                                key = key.Substring(0, 57) + "...";
+                            }
+                            item.ToolTipText += $"  - {key}\n";
+                        }
+
+                        // Indicar si hay más claves
+                        if (installation.AssociatedRegistryKeys.Count > keysToShow)
+                        {
+                            item.ToolTipText += $"  - Y {installation.AssociatedRegistryKeys.Count - keysToShow} más...\n";
+                        }
                     }
 
                     // Agregar información sobre archivos asociados si existen
                     if (installation.AssociatedFiles.Count > 0)
                     {
                         item.ToolTipText += $"Archivos asociados: {installation.AssociatedFiles.Count}\n";
+
+                        // Mostrar hasta 3 archivos como ejemplo
+                        int filesToShow = Math.Min(installation.AssociatedFiles.Count, 3);
+                        for (int i = 0; i < filesToShow; i++)
+                        {
+                            string file = installation.AssociatedFiles[i];
+                            // Truncar la ruta si es muy larga
+                            if (file.Length > 60)
+                            {
+                                file = "..." + file.Substring(file.Length - 57);
+                            }
+                            item.ToolTipText += $"  - {file}\n";
+                        }
+
+                        // Indicar si hay más archivos
+                        if (installation.AssociatedFiles.Count > filesToShow)
+                        {
+                            item.ToolTipText += $"  - Y {installation.AssociatedFiles.Count - filesToShow} más...\n";
+                        }
                     }
 
                     // Agregar notas si existen
@@ -1044,8 +1443,53 @@ namespace DesinstalaPhotoshop.UI
                 }
             }
 
+            // Seleccionar automáticamente la primera instalación principal o posible
+            SelectFirstMainInstallation();
+
             // Actualizar el estado de los botones
             UpdateButtonsState();
+        }
+
+        /// <summary>
+        /// Selecciona automáticamente la primera instalación principal o posible en la lista
+        /// </summary>
+        private void SelectFirstMainInstallation()
+        {
+            // Si no hay elementos en la lista, salir
+            if (lstInstallations.Items.Count == 0)
+                return;
+
+            // Buscar la primera instalación principal o posible
+            ListViewItem? mainInstallationItem = null;
+
+            foreach (ListViewItem item in lstInstallations.Items)
+            {
+                if (item.Tag is PhotoshopInstallation installation)
+                {
+                    if (installation.IsMainInstallation ||
+                        installation.InstallationType == InstallationType.PossibleMainInstallation)
+                    {
+                        mainInstallationItem = item;
+                        break;
+                    }
+                }
+            }
+
+            // Si se encontró una instalación principal o posible, seleccionarla
+            if (mainInstallationItem != null)
+            {
+                mainInstallationItem.Selected = true;
+                mainInstallationItem.Focused = true;
+                mainInstallationItem.EnsureVisible();
+                LogInfo($"Seleccionada automáticamente: {mainInstallationItem.Text}");
+            }
+            // Si no hay instalaciones principales o posibles, seleccionar el primer elemento
+            else if (lstInstallations.Items.Count > 0)
+            {
+                lstInstallations.Items[0].Selected = true;
+                lstInstallations.Items[0].Focused = true;
+                lstInstallations.Items[0].EnsureVisible();
+            }
         }
 
         /// <summary>
@@ -1173,7 +1617,11 @@ namespace DesinstalaPhotoshop.UI
                 // Solicitar permisos elevados
                 LogInfo("Solicitando permisos de administrador...");
                 RequestElevatedPermissions();
-                return default; // No continuamos con la ejecución ya que la aplicación se reiniciará
+
+                // Crear un valor de retorno seguro según el tipo T
+                // Si T es un tipo de referencia, devolvemos null! para indicar que es un null intencional
+                // Si T es un tipo de valor, devolvemos default(T)
+                return default(T)!; // No continuamos con la ejecución ya que la aplicación se reiniciará
             }
 
             try

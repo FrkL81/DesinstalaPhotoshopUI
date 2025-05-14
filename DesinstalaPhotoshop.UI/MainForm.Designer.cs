@@ -47,6 +47,9 @@ namespace DesinstalaPhotoshop.UI
             colVersion = new ColumnHeader();
             colLocation = new ColumnHeader();
             colConfidence = new ColumnHeader();
+            contextMenuDataGrid = new ContextMenuStrip(components);
+            menuItemCopyRow = new ToolStripMenuItem();
+            menuItemCopyTable = new ToolStripMenuItem();
             panelConsole = new Panel();
             txtConsole = new RichTextBox();
             panelConsoleButtons = new Panel();
@@ -67,15 +70,16 @@ namespace DesinstalaPhotoshop.UI
             splitContainer.Panel1.SuspendLayout();
             splitContainer.Panel2.SuspendLayout();
             splitContainer.SuspendLayout();
+            contextMenuDataGrid.SuspendLayout();
             panelConsole.SuspendLayout();
             panelConsoleButtons.SuspendLayout();
             panelLeftB.SuspendLayout();
             panelCentralB.SuspendLayout();
             panelRightB.SuspendLayout();
             SuspendLayout();
-            //
+            // 
             // panelTop
-            //
+            // 
             panelTop.BackColor = Color.FromArgb(30, 40, 60);
             panelTop.Controls.Add(btnRestore);
             panelTop.Controls.Add(btnCancel);
@@ -88,9 +92,9 @@ namespace DesinstalaPhotoshop.UI
             panelTop.Name = "panelTop";
             panelTop.Size = new Size(1000, 60);
             panelTop.TabIndex = 0;
-            //
+            // 
             // btnRestore
-            //
+            // 
             btnRestore.BackColor = Color.FromArgb(30, 40, 60);
             btnRestore.Enabled = false;
             btnRestore.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
@@ -108,9 +112,9 @@ namespace DesinstalaPhotoshop.UI
             btnRestore.Text = "  Restaurar";
             btnRestore.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnRestore.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnCancel
-            //
+            // 
             btnCancel.BackColor = Color.FromArgb(30, 40, 60);
             btnCancel.Enabled = false;
             btnCancel.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
@@ -128,9 +132,9 @@ namespace DesinstalaPhotoshop.UI
             btnCancel.Text = "  Cancelar";
             btnCancel.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnCancel.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnTestMode
-            //
+            // 
             btnTestMode.BackColor = Color.FromArgb(30, 40, 60);
             btnTestMode.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnTestMode.FlatAppearance.BorderSize = 0;
@@ -147,9 +151,9 @@ namespace DesinstalaPhotoshop.UI
             btnTestMode.Text = "  Modo Prueba";
             btnTestMode.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnTestMode.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnCleanup
-            //
+            // 
             btnCleanup.BackColor = Color.FromArgb(30, 40, 60);
             btnCleanup.Enabled = false;
             btnCleanup.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
@@ -167,9 +171,9 @@ namespace DesinstalaPhotoshop.UI
             btnCleanup.Text = "  Limpiar";
             btnCleanup.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnCleanup.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnUninstall
-            //
+            // 
             btnUninstall.BackColor = Color.FromArgb(30, 40, 60);
             btnUninstall.Enabled = false;
             btnUninstall.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
@@ -187,9 +191,9 @@ namespace DesinstalaPhotoshop.UI
             btnUninstall.Text = "  Desinstalar";
             btnUninstall.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnUninstall.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnDetect
-            //
+            // 
             btnDetect.BackColor = Color.FromArgb(30, 40, 60);
             btnDetect.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnDetect.FlatAppearance.BorderSize = 0;
@@ -206,9 +210,9 @@ namespace DesinstalaPhotoshop.UI
             btnDetect.Text = "  Detectar";
             btnDetect.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnDetect.UseVisualStyleBackColor = false;
-            //
+            // 
             // panelMain
-            //
+            // 
             panelMain.BackColor = Color.FromArgb(20, 30, 45);
             panelMain.Controls.Add(splitContainer);
             panelMain.Dock = DockStyle.Fill;
@@ -216,33 +220,34 @@ namespace DesinstalaPhotoshop.UI
             panelMain.Name = "panelMain";
             panelMain.Size = new Size(1000, 570);
             panelMain.TabIndex = 1;
-            //
+            // 
             // splitContainer
-            //
+            // 
             splitContainer.BackColor = Color.FromArgb(20, 30, 45);
             splitContainer.Dock = DockStyle.Fill;
             splitContainer.Location = new Point(0, 0);
             splitContainer.Name = "splitContainer";
             splitContainer.Orientation = Orientation.Horizontal;
-            //
+            // 
             // splitContainer.Panel1
-            //
+            // 
             splitContainer.Panel1.BackColor = Color.FromArgb(20, 30, 45);
             splitContainer.Panel1.Controls.Add(lstInstallations);
-            //
+            // 
             // splitContainer.Panel2
-            //
+            // 
             splitContainer.Panel2.BackColor = Color.FromArgb(20, 30, 45);
             splitContainer.Panel2.Controls.Add(panelConsole);
             splitContainer.Size = new Size(1000, 570);
             splitContainer.SplitterDistance = 272;
             splitContainer.TabIndex = 0;
-            //
+            // 
             // lstInstallations
-            //
+            // 
             lstInstallations.BackColor = Color.FromArgb(20, 30, 45);
             lstInstallations.BorderStyle = BorderStyle.None;
             lstInstallations.Columns.AddRange(new ColumnHeader[] { colName, colVersion, colLocation, colConfidence });
+            lstInstallations.ContextMenuStrip = contextMenuDataGrid;
             lstInstallations.Dock = DockStyle.Fill;
             lstInstallations.ForeColor = Color.White;
             lstInstallations.FullRowSelect = true;
@@ -253,29 +258,53 @@ namespace DesinstalaPhotoshop.UI
             lstInstallations.TabIndex = 0;
             lstInstallations.UseCompatibleStateImageBehavior = false;
             lstInstallations.View = View.Details;
-            //
+            // 
             // colName
-            //
+            // 
             colName.Text = "Nombre";
-            colName.Width = 300;
-            //
+            colName.Width = 416;
+            // 
             // colVersion
-            //
+            // 
             colVersion.Text = "Versión";
             colVersion.Width = 100;
-            //
+            // 
             // colLocation
-            //
+            // 
             colLocation.Text = "Ubicación";
-            colLocation.Width = 505;
-            //
+            colLocation.Width = 345;
+            // 
             // colConfidence
-            //
+            // 
             colConfidence.Text = "Confianza";
-            colConfidence.Width = 100;
-            //
+            colConfidence.Width = 150;
+            // 
+            // contextMenuDataGrid
+            // 
+            contextMenuDataGrid.BackColor = Color.FromArgb(30, 40, 60);
+            contextMenuDataGrid.ForeColor = Color.White;
+            contextMenuDataGrid.Items.AddRange(new ToolStripItem[] { menuItemCopyRow, menuItemCopyTable });
+            contextMenuDataGrid.Name = "contextMenuDataGrid";
+            contextMenuDataGrid.Size = new Size(139, 48);
+            // 
+            // menuItemCopyRow
+            // 
+            menuItemCopyRow.BackColor = Color.FromArgb(30, 40, 60);
+            menuItemCopyRow.ForeColor = Color.White;
+            menuItemCopyRow.Name = "menuItemCopyRow";
+            menuItemCopyRow.Size = new Size(138, 22);
+            menuItemCopyRow.Text = "Copiar fila";
+            // 
+            // menuItemCopyTable
+            // 
+            menuItemCopyTable.BackColor = Color.FromArgb(30, 40, 60);
+            menuItemCopyTable.ForeColor = Color.White;
+            menuItemCopyTable.Name = "menuItemCopyTable";
+            menuItemCopyTable.Size = new Size(138, 22);
+            menuItemCopyTable.Text = "Copiar tabla";
+            // 
             // panelConsole
-            //
+            // 
             panelConsole.BackColor = Color.FromArgb(20, 30, 45);
             panelConsole.Controls.Add(txtConsole);
             panelConsole.Controls.Add(panelConsoleButtons);
@@ -284,9 +313,9 @@ namespace DesinstalaPhotoshop.UI
             panelConsole.Name = "panelConsole";
             panelConsole.Size = new Size(1000, 294);
             panelConsole.TabIndex = 0;
-            //
+            // 
             // txtConsole
-            //
+            // 
             txtConsole.BackColor = Color.FromArgb(20, 30, 45);
             txtConsole.BorderStyle = BorderStyle.None;
             txtConsole.Dock = DockStyle.Fill;
@@ -298,9 +327,9 @@ namespace DesinstalaPhotoshop.UI
             txtConsole.Size = new Size(1000, 224);
             txtConsole.TabIndex = 0;
             txtConsole.Text = "";
-            //
+            // 
             // panelConsoleButtons
-            //
+            // 
             panelConsoleButtons.BackColor = Color.FromArgb(30, 40, 60);
             panelConsoleButtons.Controls.Add(panelLeftB);
             panelConsoleButtons.Controls.Add(panelCentralB);
@@ -313,17 +342,17 @@ namespace DesinstalaPhotoshop.UI
             panelConsoleButtons.Name = "panelConsoleButtons";
             panelConsoleButtons.Size = new Size(1000, 70);
             panelConsoleButtons.TabIndex = 1;
-            //
+            // 
             // panelLeftB
-            //
+            // 
             panelLeftB.Controls.Add(lblAnimatedText);
             panelLeftB.Location = new Point(13, 43);
             panelLeftB.Name = "panelLeftB";
             panelLeftB.Size = new Size(280, 24);
             panelLeftB.TabIndex = 5;
-            //
+            // 
             // lblAnimatedText
-            //
+            // 
             lblAnimatedText.BackColor = Color.Transparent;
             lblAnimatedText.Dock = DockStyle.Top;
             lblAnimatedText.ForeColor = Color.White;
@@ -332,20 +361,19 @@ namespace DesinstalaPhotoshop.UI
             lblAnimatedText.Size = new Size(280, 20);
             lblAnimatedText.TabIndex = 1;
             lblAnimatedText.TextAlign = ContentAlignment.MiddleLeft;
-            //
+            // 
             // panelCentralB
-            //
+            // 
             panelCentralB.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             panelCentralB.Controls.Add(lblProgress);
             panelCentralB.Location = new Point(300, 43);
             panelCentralB.Name = "panelCentralB";
             panelCentralB.Size = new Size(265, 24);
             panelCentralB.TabIndex = 4;
-            //
+            // 
             // lblProgress
-            //
+            // 
             lblProgress.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            lblProgress.AutoSize = false;
             lblProgress.ForeColor = Color.White;
             lblProgress.Location = new Point(3, 3);
             lblProgress.Name = "lblProgress";
@@ -353,18 +381,18 @@ namespace DesinstalaPhotoshop.UI
             lblProgress.TabIndex = 1;
             lblProgress.Text = "Operación en curso - 0%";
             lblProgress.TextAlign = ContentAlignment.MiddleLeft;
-            //
+            // 
             // panelRightB
-            //
+            // 
             panelRightB.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             panelRightB.Controls.Add(progressBar);
             panelRightB.Location = new Point(571, 43);
             panelRightB.Name = "panelRightB";
             panelRightB.Size = new Size(417, 24);
             panelRightB.TabIndex = 3;
-            //
+            // 
             // progressBar
-            //
+            // 
             progressBar.Dock = DockStyle.Top;
             progressBar.Location = new Point(0, 0);
             progressBar.MinimumSize = new Size(100, 20);
@@ -372,9 +400,9 @@ namespace DesinstalaPhotoshop.UI
             progressBar.Size = new Size(417, 20);
             progressBar.Style = ProgressBarStyle.Continuous;
             progressBar.TabIndex = 0;
-            //
+            // 
             // btnGenerarScript
-            //
+            // 
             btnGenerarScript.BackColor = Color.FromArgb(30, 40, 60);
             btnGenerarScript.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnGenerarScript.FlatAppearance.BorderSize = 0;
@@ -391,9 +419,9 @@ namespace DesinstalaPhotoshop.UI
             btnGenerarScript.Text = "  Generar Script";
             btnGenerarScript.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnGenerarScript.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnAbrirLog
-            //
+            // 
             btnAbrirLog.BackColor = Color.FromArgb(30, 40, 60);
             btnAbrirLog.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnAbrirLog.FlatAppearance.BorderSize = 0;
@@ -410,9 +438,9 @@ namespace DesinstalaPhotoshop.UI
             btnAbrirLog.Text = "  Abrir Log";
             btnAbrirLog.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnAbrirLog.UseVisualStyleBackColor = false;
-            //
+            // 
             // btnCopyOutput
-            //
+            // 
             btnCopyOutput.BackColor = Color.FromArgb(30, 40, 60);
             btnCopyOutput.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnCopyOutput.FlatAppearance.BorderSize = 0;
@@ -429,9 +457,9 @@ namespace DesinstalaPhotoshop.UI
             btnCopyOutput.Text = "  Copiar";
             btnCopyOutput.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnCopyOutput.UseVisualStyleBackColor = false;
-            //
+            // 
             // lblInfoText
-            //
+            // 
             lblInfoText.Anchor = AnchorStyles.Left;
             lblInfoText.ForeColor = Color.White;
             lblInfoText.Location = new Point(12, 7);
@@ -439,13 +467,13 @@ namespace DesinstalaPhotoshop.UI
             lblInfoText.Size = new Size(120, 15);
             lblInfoText.TabIndex = 0;
             lblInfoText.Text = "Información: 0/0";
-            //
+            // 
             // animationTimer
-            //
+            // 
             animationTimer.Interval = 200;
-            //
+            // 
             // MainForm
-            //
+            // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 30, 45);
@@ -462,11 +490,11 @@ namespace DesinstalaPhotoshop.UI
             splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();
             splitContainer.ResumeLayout(false);
+            contextMenuDataGrid.ResumeLayout(false);
             panelConsole.ResumeLayout(false);
             panelConsoleButtons.ResumeLayout(false);
             panelLeftB.ResumeLayout(false);
             panelCentralB.ResumeLayout(false);
-            panelCentralB.PerformLayout();
             panelRightB.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -498,6 +526,9 @@ namespace DesinstalaPhotoshop.UI
         private Label lblInfoText;
         private Label lblAnimatedText;
         private System.Windows.Forms.Timer animationTimer;
+        private ContextMenuStrip contextMenuDataGrid;
+        private ToolStripMenuItem menuItemCopyRow;
+        private ToolStripMenuItem menuItemCopyTable;
         private Panel panelRightB;
         private Panel panelCentralB;
         private Panel panelLeftB;
