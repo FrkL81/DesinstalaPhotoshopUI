@@ -7,14 +7,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
-using System.Security.Principal;
 using System.Linq;
 using CustomMsgBoxLibrary;
 using CustomMsgBoxLibrary.Types;
 using DesinstalaPhotoshop.Core.Models;
+using DesinstalaPhotoshop.Core.Services.Helpers;
 
 namespace DesinstalaPhotoshop.UI
 {
+    using DesinstalaPhotoshop.UI.Models;
     public partial class MainForm : Form
     {
         // Lista de instalaciones detectadas
@@ -78,7 +79,7 @@ namespace DesinstalaPhotoshop.UI
             SetupTooltips();
 
             // Configurar el timer para la animación de progreso
-            animationTimer.Tick += AnimationTimer_Tick;
+            animationTimer.Tick += AnimationTimer_Tick!;
 
             // Inicializar el panel de información
             InitializeInfoPanel();
@@ -104,7 +105,7 @@ namespace DesinstalaPhotoshop.UI
 
             // Lista de instalaciones
             lstInstallations.SelectedIndexChanged += LstInstallations_SelectedIndexChanged!;
-            
+
             // Eventos del formulario para actualizar el layout
             this.Load += MainForm_Load_UpdateLayout!;
             this.Resize += MainForm_Resize_UpdateLayout!;
@@ -144,30 +145,29 @@ namespace DesinstalaPhotoshop.UI
                         // Crear una instancia del servicio de detección
                         var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
                         var detectionService = new DesinstalaPhotoshop.Core.Services.DetectionService(loggingService);
-                        
+
                         // Crear un objeto de progreso para pasar al servicio
                         var progressReporter = new Progress<DesinstalaPhotoshop.Core.Models.ProgressInfo>(info => {
                             // Actualizar la UI con la información de progreso
-                            {
-                                progress.Report(info.ProgressPercentage);
-                                UpdateInfoProgress((int)(info.ProgressPercentage / 20), 5); // Convertir porcentaje a pasos
-                            }
-                            
-                            if (!string.IsNullOrEmpty(info.StatusMessage))
-                            {
-                                LogInfo(info.StatusMessage);
-                            }
+                            progress.Report(new ProgressInfo(
+                                info.ProgressPercentage,
+                                info.OperationTitle,
+                                info.StatusMessage,
+                                info.OperationStatus));
+
+                            // Actualizar el contador de pasos
+                            UpdateInfoProgress((int)(info.ProgressPercentage / 20), 5); // Convertir porcentaje a pasos
                         });
-                        
+
                         // Ejecutar la detección
                         var installations = await detectionService.DetectInstallationsAsync(progressReporter, token);
-                        
+
                         // Actualizar la lista de instalaciones detectadas
                         _detectedInstallations = new List<object>(installations.Cast<object>().ToList());
-                        
+
                         // Actualizar la UI con las instalaciones detectadas
                         UpdateInstallationsList();
-                        
+
                         LogSuccess($"Detección completada con éxito. Se encontraron {installations.Count} instalaciones.");
                         return installations;
                     }
@@ -198,10 +198,11 @@ namespace DesinstalaPhotoshop.UI
                     {
                         await Task.Delay(1500, token);
                         UpdateInfoProgress(i, 3);
-                        LogInfo($"Fase {i} de 3 completada");
+                        progress.Report(ProgressInfo.Running(i * 33, "Desinstalando Photoshop", $"Fase {i} de 3 completada"));
                     }
 
                     LogSuccess("Desinstalación completada con éxito.");
+                    progress.Report(ProgressInfo.Completed("Desinstalación", "Desinstalación completada con éxito."));
                     return true;
                 },
                 "Desinstalando Photoshop",
@@ -225,10 +226,11 @@ namespace DesinstalaPhotoshop.UI
                     {
                         await Task.Delay(1200, token);
                         UpdateInfoProgress(i, 4);
-                        LogInfo($"Limpieza {i} de 4 completada");
+                        progress.Report(ProgressInfo.Running(i * 25, "Limpiando residuos", $"Limpieza {i} de 4 completada"));
                     }
 
                     LogSuccess("Limpieza completada con éxito.");
+                    progress.Report(ProgressInfo.Completed("Limpieza", "Limpieza completada con éxito."));
                     return true;
                 },
                 "Limpiando residuos",
@@ -359,17 +361,40 @@ namespace DesinstalaPhotoshop.UI
         /// </summary>
         private void UpdateButtonsState()
         {
-            // Por ahora, simplemente habilitamos/deshabilitamos los botones según la selección
+            // Verificar si hay instalaciones residuales detectadas
+            bool hasResiduals = false;
+
+            if (_detectedInstallations != null && _detectedInstallations.Count > 0)
+            {
+                foreach (var obj in _detectedInstallations)
+                {
+                    if (obj is DesinstalaPhotoshop.Core.Models.PhotoshopInstallation installation)
+                    {
+                        if (installation.IsResidual)
+                            hasResiduals = true;
+                    }
+                }
+            }
+
+            // Verificar si hay una selección en la lista
             bool hasSelection = lstInstallations.SelectedItems.Count > 0;
+
+            // Verificar si la selección es una instalación principal o posible
+            bool selectedMainInstallation = false;
+            if (hasSelection && lstInstallations.SelectedItems[0].Tag is PhotoshopInstallation selectedInstallation)
+            {
+                selectedMainInstallation = selectedInstallation.IsMainInstallation ||
+                                          selectedInstallation.InstallationType == InstallationType.PossibleMainInstallation;
+            }
 
             // El botón Detectar siempre está habilitado excepto durante operaciones
             btnDetect.Enabled = true;
 
-            // El botón Desinstalar requiere una selección
-            btnUninstall.Enabled = hasSelection;
+            // El botón Desinstalar requiere una selección de instalación principal o posible
+            btnUninstall.Enabled = hasSelection && selectedMainInstallation;
 
-            // El botón Limpiar está habilitado si hay instalaciones detectadas
-            btnCleanup.Enabled = _detectedInstallations.Count > 0;
+            // El botón Limpiar está habilitado si hay residuos detectados
+            btnCleanup.Enabled = hasResiduals;
 
             // El botón Modo de Prueba siempre está habilitado
             btnTestMode.Enabled = true;
@@ -487,7 +512,7 @@ namespace DesinstalaPhotoshop.UI
         /// <summary>
         /// Actualiza el progreso de la operación en curso
         /// </summary>
-        private void UpdateProgress(int percentage, string statusText = null)
+        private void UpdateProgress(int percentage, string? statusText = null)
         {
             if (InvokeRequired)
             {
@@ -530,13 +555,13 @@ namespace DesinstalaPhotoshop.UI
             progressBar.Minimum = 0;
             progressBar.Maximum = 100;
             progressBar.Value = 0;
-            
+
             // Ocultar controles de progreso inicialmente
             lblProgress.Visible = false;
             progressBar.Visible = false;
             lblAnimatedText.Visible = false;
         }
-        
+
         private void MainForm_Load_UpdateLayout(object sender, EventArgs e)
         {
             UpdatePanelInfoLayout();
@@ -649,12 +674,12 @@ namespace DesinstalaPhotoshop.UI
                     var item = new ListViewItem(installation.DisplayName);
                     item.SubItems.Add(installation.Version);
                     item.SubItems.Add(installation.InstallLocation);
-                    item.SubItems.Add(installation.Type.ToString());
+                    item.SubItems.Add(installation.InstallationType.ToString());
                     item.SubItems.Add(installation.ConfidenceScore.ToString() + "%");
-                    
+
                     // Guardar la referencia a la instalación en el Tag para acceso posterior
                     item.Tag = installation;
-                    
+
                     // Agregar el item a la lista
                     lstInstallations.Items.Add(item);
                 }
@@ -688,10 +713,10 @@ namespace DesinstalaPhotoshop.UI
         /// <summary>
         /// Manejador del evento Tick del timer de animación
         /// </summary>
-        private void AnimationTimer_Tick(object sender, EventArgs e)
+        private void AnimationTimer_Tick(object? sender, EventArgs e)
         {
             UpdateAnimatedText();
-            
+
             // Actualizar texto de progreso con animación de puntos
             string dots = new string('.', _animationDots);
             lblProgress.Text = $"{_currentOperation}{dots} - {progressBar.Value}%";
@@ -768,7 +793,7 @@ namespace DesinstalaPhotoshop.UI
         /// <param name="requiresElevation">Indica si la operación requiere permisos elevados</param>
         /// <returns>Resultado de la operación</returns>
         private async Task<T> RunOperationAsync<T>(
-            Func<IProgress<int>, CancellationToken, Task<T>> operation,
+            Func<IProgress<ProgressInfo>, CancellationToken, Task<T>> operation,
             string operationName,
             bool requiresElevation = false)
         {
@@ -778,10 +803,10 @@ namespace DesinstalaPhotoshop.UI
                 LogWarning("Esta operación requiere permisos de administrador.");
                 LogInfo("Se reiniciará la aplicación con permisos elevados...");
 
-                // Aquí iría el código para reiniciar la aplicación con permisos elevados
-                // Por ahora, simplemente simulamos que continuamos
-                await Task.Delay(1500);
-                LogInfo("Simulando ejecución con permisos elevados...");
+                // Solicitar permisos elevados
+                LogInfo("Solicitando permisos de administrador...");
+                RequestElevatedPermissions();
+                return default; // No continuamos con la ejecución ya que la aplicación se reiniciará
             }
 
             try
@@ -793,7 +818,16 @@ namespace DesinstalaPhotoshop.UI
                 _cts = new CancellationTokenSource();
 
                 // Crear un objeto de progreso que actualiza la UI
-                var progress = new Progress<int>(percentage => UpdateProgress(percentage));
+                var progress = new Progress<ProgressInfo>(info => {
+                    // Actualizar porcentaje y mensaje de estado
+                    UpdateProgress(info.ProgressPercentage, info.StatusMessage);
+
+                    // Mostrar mensajes de estado en la consola
+                    if (!string.IsNullOrEmpty(info.StatusMessage))
+                    {
+                        LogInfo(info.StatusMessage);
+                    }
+                });
 
                 // Ejecutar la operación
                 return await operation(progress, _cts.Token);
@@ -824,11 +858,22 @@ namespace DesinstalaPhotoshop.UI
             if (_developmentMode)
                 return false;
 
-            // Verificar si tenemos permisos de administrador
-            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            return AdminHelper.IsRunningAsAdmin();
+        }
+
+        /// <summary>
+        /// Solicita permisos de administrador reiniciando la aplicación
+        /// </summary>
+        /// <param name="arguments">Argumentos adicionales para pasar a la aplicación reiniciada</param>
+        private void RequestElevatedPermissions(string arguments = "")
+        {
+            if (!AdminHelper.RestartAsAdmin(arguments))
             {
-                WindowsPrincipal principal = new WindowsPrincipal(identity);
-                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                CustomMsgBox.Show(
+                    prompt: "No se pudo reiniciar la aplicación con permisos de administrador.",
+                    title: "Error de Elevación",
+                    buttons: CustomMessageBoxButtons.OK,
+                    icon: CustomMessageBoxIcon.Error);
             }
         }
 

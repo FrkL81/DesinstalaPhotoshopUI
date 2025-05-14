@@ -2,23 +2,27 @@ namespace DesinstalaPhotoshop.Core.Services.Helpers;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 using DesinstalaPhotoshop.Core.Models;
 
 /// <summary>
 /// Proporciona métodos auxiliares para operaciones con el registro de Windows.
 /// </summary>
+[SupportedOSPlatform("windows")]
 public class RegistryHelper : IRegistryHelper
 {
     private readonly ILoggingService _logger;
-    
+
     // Rutas comunes del registro donde se pueden encontrar instalaciones de software
     private static readonly string[] UninstallKeys = new[]
     {
         @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
         @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
     };
-    
+
     /// <summary>
     /// Inicializa una nueva instancia de la clase RegistryHelper.
     /// </summary>
@@ -27,7 +31,7 @@ public class RegistryHelper : IRegistryHelper
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
+
     /// <summary>
     /// Busca instalaciones de Adobe Photoshop en el registro de Windows.
     /// </summary>
@@ -35,7 +39,7 @@ public class RegistryHelper : IRegistryHelper
     public List<PhotoshopInstallation> FindPhotoshopInstallations()
     {
         var installations = new List<PhotoshopInstallation>();
-        
+
         try
         {
             // Buscar en las claves de desinstalación de 64 y 32 bits
@@ -43,20 +47,20 @@ public class RegistryHelper : IRegistryHelper
             {
                 using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Default);
                 using var key = baseKey.OpenSubKey(uninstallKey);
-                
+
                 if (key == null)
                     continue;
-                    
+
                 foreach (var subKeyName in key.GetSubKeyNames())
                 {
                     using var subKey = key.OpenSubKey(subKeyName);
                     if (subKey == null)
                         continue;
-                        
+
                     var displayName = subKey.GetValue("DisplayName") as string;
-                    
+
                     // Verificar si es una instalación de Photoshop
-                    if (!string.IsNullOrEmpty(displayName) && 
+                    if (!string.IsNullOrEmpty(displayName) &&
                         (displayName.Contains("Adobe Photoshop", StringComparison.OrdinalIgnoreCase) ||
                          displayName.Contains("Photoshop", StringComparison.OrdinalIgnoreCase)))
                     {
@@ -69,26 +73,26 @@ public class RegistryHelper : IRegistryHelper
                             EstimatedSize = Convert.ToInt64(subKey.GetValue("EstimatedSize") ?? 0) * 1024, // KB a bytes
                             DetectedBy = DetectionMethod.Registry,
                             ConfidenceScore = 80, // Alta confianza para detecciones de registro
-                            RegistryKeys = new List<string> { $"HKLM\\{uninstallKey}\\{subKeyName}" }
+                            AssociatedRegistryKeys = new List<string> { $"HKLM\\{uninstallKey}\\{subKeyName}" }
                         };
-                        
+
                         // Intentar obtener la fecha de instalación
-                        if (subKey.GetValue("InstallDate") is string installDateStr && 
+                        if (subKey.GetValue("InstallDate") is string installDateStr &&
                             !string.IsNullOrEmpty(installDateStr))
                         {
-                            if (DateTime.TryParseExact(installDateStr, "yyyyMMdd", null, 
+                            if (DateTime.TryParseExact(installDateStr, "yyyyMMdd", null,
                                 System.Globalization.DateTimeStyles.None, out var installDate))
                             {
                                 installation.InstallDate = installDate;
                             }
                         }
-                        
+
                         installations.Add(installation);
                         _logger.LogInfo($"Instalación de Photoshop encontrada en registro: {displayName}");
                     }
                 }
             }
-            
+
             // Buscar claves específicas de Adobe
             FindAdobeSpecificKeys(installations);
         }
@@ -96,10 +100,10 @@ public class RegistryHelper : IRegistryHelper
         {
             _logger.LogError($"Error al buscar instalaciones en el registro: {ex.Message}");
         }
-        
+
         return installations;
     }
-    
+
     /// <summary>
     /// Busca claves específicas de Adobe en el registro que puedan contener información adicional.
     /// </summary>
@@ -111,10 +115,10 @@ public class RegistryHelper : IRegistryHelper
             // Buscar en la clave de Adobe
             using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Default);
             using var adobeKey = baseKey.OpenSubKey(@"SOFTWARE\Adobe");
-            
+
             if (adobeKey == null)
                 return;
-                
+
             foreach (var productKeyName in adobeKey.GetSubKeyNames())
             {
                 // Verificar si es una clave relacionada con Photoshop
@@ -123,30 +127,30 @@ public class RegistryHelper : IRegistryHelper
                     using var productKey = adobeKey.OpenSubKey(productKeyName);
                     if (productKey == null)
                         continue;
-                        
+
                     // Buscar instalaciones existentes para enriquecer o crear nuevas si no existen
                     var version = productKey.GetValue("Version") as string ?? string.Empty;
                     var installDir = productKey.GetValue("InstallPath") as string ?? string.Empty;
-                    
+
                     // Registrar la clave encontrada
                     var registryKeyPath = $"HKLM\\SOFTWARE\\Adobe\\{productKeyName}";
                     _logger.LogInfo($"Clave de registro específica de Adobe encontrada: {registryKeyPath}");
-                    
+
                     // Buscar si ya existe una instalación con esta versión
-                    var existingInstallation = installations.FirstOrDefault(i => 
-                        i.Version == version || 
+                    var existingInstallation = installations.FirstOrDefault(i =>
+                        i.Version == version ||
                         (!string.IsNullOrEmpty(installDir) && i.InstallLocation == installDir));
-                    
+
                     if (existingInstallation != null)
                     {
                         // Enriquecer la instalación existente
                         if (!string.IsNullOrEmpty(installDir) && string.IsNullOrEmpty(existingInstallation.InstallLocation))
                             existingInstallation.InstallLocation = installDir;
-                            
+
                         if (!string.IsNullOrEmpty(version) && string.IsNullOrEmpty(existingInstallation.Version))
                             existingInstallation.Version = version;
-                            
-                        existingInstallation.RegistryKeys.Add(registryKeyPath);
+
+                        existingInstallation.AssociatedRegistryKeys.Add(registryKeyPath);
                         existingInstallation.ConfidenceScore += 10; // Aumentar confianza por encontrar más evidencia
                     }
                     else if (!string.IsNullOrEmpty(installDir))
@@ -159,9 +163,9 @@ public class RegistryHelper : IRegistryHelper
                             InstallLocation = installDir,
                             DetectedBy = DetectionMethod.Registry,
                             ConfidenceScore = 60, // Confianza media para detecciones de claves específicas
-                            RegistryKeys = new List<string> { registryKeyPath }
+                            AssociatedRegistryKeys = new List<string> { registryKeyPath }
                         };
-                        
+
                         installations.Add(newInstallation);
                         _logger.LogInfo($"Nueva instalación de Photoshop detectada en clave específica: {newInstallation.DisplayName}");
                     }
@@ -173,7 +177,7 @@ public class RegistryHelper : IRegistryHelper
             _logger.LogError($"Error al buscar claves específicas de Adobe: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// Verifica si una clave de registro existe.
     /// </summary>
@@ -192,7 +196,7 @@ public class RegistryHelper : IRegistryHelper
             return false;
         }
     }
-    
+
     /// <summary>
     /// Obtiene un valor de una clave del registro.
     /// </summary>
@@ -212,7 +216,7 @@ public class RegistryHelper : IRegistryHelper
             return null;
         }
     }
-    
+
     /// <summary>
     /// Obtiene una clave del registro a partir de su ruta.
     /// </summary>
@@ -222,7 +226,7 @@ public class RegistryHelper : IRegistryHelper
     {
         if (string.IsNullOrWhiteSpace(keyPath))
             return null;
-            
+
         try
         {
             // Determinar la base de la clave
@@ -237,7 +241,7 @@ public class RegistryHelper : IRegistryHelper
                 hive = RegistryHive.Users;
             else
                 return null;
-                
+
             // Extraer la parte de la ruta después de la base
             string subKeyPath;
             if (keyPath.StartsWith("HKLM\\"))
@@ -258,7 +262,7 @@ public class RegistryHelper : IRegistryHelper
                 subKeyPath = keyPath.Substring(11);
             else
                 return null;
-                
+
             // Abrir la clave
             using var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Default);
             return baseKey.OpenSubKey(subKeyPath);
@@ -267,6 +271,119 @@ public class RegistryHelper : IRegistryHelper
         {
             _logger.LogError($"Error al obtener la clave {keyPath}: {ex.Message}");
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Exporta una clave del registro a un archivo .reg.
+    /// </summary>
+    /// <param name="keyPath">Ruta de la clave a exportar.</param>
+    /// <param name="filePath">Ruta del archivo donde se guardará la exportación.</param>
+    /// <returns>True si la exportación fue exitosa, false en caso contrario.</returns>
+    public bool ExportRegistryKey(string keyPath, string filePath)
+    {
+        try
+        {
+            _logger.LogInfo($"Exportando clave de registro {keyPath} a {filePath}...");
+
+            // Asegurarse de que el directorio destino exista
+            string? directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Usar el comando reg.exe para exportar la clave
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "reg.exe",
+                Arguments = $"export \"{keyPath}\" \"{filePath}\" /y",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                _logger.LogError($"No se pudo iniciar el proceso para exportar la clave {keyPath}");
+                return false;
+            }
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                _logger.LogError($"Error al exportar la clave {keyPath}: {error}");
+                return false;
+            }
+
+            _logger.LogInfo($"Clave de registro {keyPath} exportada con éxito a {filePath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al exportar la clave {keyPath}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Importa un archivo .reg al registro.
+    /// </summary>
+    /// <param name="filePath">Ruta del archivo .reg a importar.</param>
+    /// <returns>True si la importación fue exitosa, false en caso contrario.</returns>
+    public bool ImportRegistryFile(string filePath)
+    {
+        try
+        {
+            _logger.LogInfo($"Importando archivo de registro {filePath}...");
+
+            // Verificar que el archivo exista
+            if (!File.Exists(filePath))
+            {
+                _logger.LogError($"El archivo {filePath} no existe");
+                return false;
+            }
+
+            // Usar el comando reg.exe para importar el archivo
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "reg.exe",
+                Arguments = $"import \"{filePath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                _logger.LogError($"No se pudo iniciar el proceso para importar el archivo {filePath}");
+                return false;
+            }
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                _logger.LogError($"Error al importar el archivo {filePath}: {error}");
+                return false;
+            }
+
+            _logger.LogInfo($"Archivo de registro {filePath} importado con éxito");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al importar el archivo {filePath}: {ex.Message}");
+            return false;
         }
     }
 }

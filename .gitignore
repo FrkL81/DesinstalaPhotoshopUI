@@ -2,22 +2,90 @@
 .vs/
 [Bb]in/
 [Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Ll]og/
+[Ll]ogs/
 
 # Archivos de usuario
 *.user
 *.userosscache
 *.suo
+*.userprefs
+.vscode/
+.idea/
+*.sln.iml
 
 # Archivos de caché de NuGet
 *.nuget.props
 *.nuget.targets
+packages/
 
 # Archivos de compilación
 *.dll
 *.exe
 *.pdb
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
 
-# Archivos específicos del proyecto
+# Archivos temporales
+[Tt]emp/
+[Tt]mp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+*.DS_Store
+
+# Documentación y archivos adicionales
+docs/
+TMP.md
+*_i.c
+*_p.c
+*_h.h
+*.meta
+*.iobj
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+
+# Archivos específicos del proyecto que queremos mantener
 PlanDesarrollo.md
-memory-bank/
+README.md
 ManualDesarrollo/
+memory-bank/

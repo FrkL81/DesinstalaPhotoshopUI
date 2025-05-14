@@ -2,6 +2,7 @@ namespace DesinstalaPhotoshop.Core.Services;
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using DesinstalaPhotoshop.Core.Models;
@@ -10,12 +11,13 @@ using DesinstalaPhotoshop.Core.Services.Helpers;
 /// <summary>
 /// Implementación del servicio de detección de instalaciones de Adobe Photoshop.
 /// </summary>
+[SupportedOSPlatform("windows")]
 public class DetectionService : IDetectionService
 {
     private readonly ILoggingService _logger;
     private readonly IRegistryHelper _registryHelper;
     private readonly IFileSystemHelper _fileSystemHelper;
-    
+
     /// <summary>
     /// Inicializa una nueva instancia de la clase DetectionService.
     /// </summary>
@@ -28,7 +30,7 @@ public class DetectionService : IDetectionService
         _registryHelper = registryHelper ?? throw new ArgumentNullException(nameof(registryHelper));
         _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
     }
-    
+
     /// <summary>
     /// Inicializa una nueva instancia de la clase DetectionService con implementaciones predeterminadas.
     /// </summary>
@@ -37,7 +39,7 @@ public class DetectionService : IDetectionService
         : this(logger, new RegistryHelper(logger), new FileSystemHelper(logger))
     {
     }
-    
+
     /// <summary>
     /// Detecta instalaciones de Adobe Photoshop en el sistema.
     /// </summary>
@@ -50,75 +52,75 @@ public class DetectionService : IDetectionService
     {
         _logger.LogInfo("Iniciando detección de instalaciones de Photoshop...");
         progress?.Report(ProgressInfo.Running(0, "Detectando instalaciones de Photoshop", "Iniciando..."));
-        
+
         var installations = new List<PhotoshopInstallation>();
-        
+
         try
         {
             // Método 1: Detección desde programas instalados
             _logger.LogInfo("Buscando instalaciones en programas instalados...");
-            progress?.Report(ProgressInfo.Running(30, "Detectando instalaciones de Photoshop", 
+            progress?.Report(ProgressInfo.Running(30, "Detectando instalaciones de Photoshop",
                 "Buscando en programas instalados..."));
-                
+
             var programsInstallations = DetectFromInstalledPrograms();
             installations.AddRange(programsInstallations);
             _logger.LogInfo($"Se encontraron {programsInstallations.Count} instalaciones en programas instalados.");
-            
+
             if (cancellationToken.IsCancellationRequested)
             {
                 _logger.LogWarning("Detección cancelada por el usuario.");
                 return installations;
             }
-            
+
             // Método 2: Detección desde el registro
             _logger.LogInfo("Buscando instalaciones en el registro de Windows...");
-            progress?.Report(ProgressInfo.Running(60, "Detectando instalaciones de Photoshop", 
+            progress?.Report(ProgressInfo.Running(60, "Detectando instalaciones de Photoshop",
                 "Buscando en el registro de Windows..."));
-                
+
             var registryInstallations = DetectFromRegistry();
             installations.AddRange(registryInstallations);
             _logger.LogInfo($"Se encontraron {registryInstallations.Count} instalaciones en el registro.");
-            
+
             if (cancellationToken.IsCancellationRequested)
             {
                 _logger.LogWarning("Detección cancelada por el usuario.");
                 return installations;
             }
-            
+
             // Método 3: Detección desde el sistema de archivos
             _logger.LogInfo("Buscando instalaciones en el sistema de archivos...");
-            progress?.Report(ProgressInfo.Running(90, "Detectando instalaciones de Photoshop", 
+            progress?.Report(ProgressInfo.Running(90, "Detectando instalaciones de Photoshop",
                 "Buscando en el sistema de archivos..."));
-                
+
             var filesystemInstallations = DetectFromFileSystem();
             installations.AddRange(filesystemInstallations);
             _logger.LogInfo($"Se encontraron {filesystemInstallations.Count} instalaciones en el sistema de archivos.");
-            
+
             // Enriquecer y clasificar las instalaciones encontradas
             if (installations.Count > 0)
             {
                 _logger.LogInfo($"Enriqueciendo información de {installations.Count} instalaciones encontradas...");
-                
+
                 for (int i = 0; i < installations.Count; i++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                         break;
-                        
+
                     installations[i] = await EnrichInstallationInfoAsync(installations[i]);
                     installations[i] = ClassifyInstallation(installations[i]);
                 }
-                
+
                 _logger.LogInfo("Detección de instalaciones completada.");
-                progress?.Report(ProgressInfo.Completed("Detección de instalaciones", 
+                progress?.Report(ProgressInfo.Completed("Detección de instalaciones",
                     $"Se encontraron {installations.Count} instalaciones de Photoshop."));
             }
             else
             {
                 _logger.LogInfo("Detección de instalaciones completada. No se encontraron instalaciones.");
-                progress?.Report(ProgressInfo.Completed("Detección de instalaciones", 
+                progress?.Report(ProgressInfo.Completed("Detección de instalaciones",
                     "No se encontraron instalaciones de Photoshop."));
             }
-            
+
             return installations;
         }
         catch (OperationCanceledException)
@@ -129,12 +131,12 @@ public class DetectionService : IDetectionService
         catch (Exception ex)
         {
             _logger.LogError($"Error durante la detección de instalaciones: {ex.Message}");
-            progress?.Report(ProgressInfo.Error("Detección de instalaciones", 
+            progress?.Report(ProgressInfo.Error("Detección de instalaciones",
                 $"Error durante la detección: {ex.Message}"));
             throw;
         }
     }
-    
+
     /// <summary>
     /// Clasifica una instalación de Photoshop según su estado y completitud.
     /// </summary>
@@ -143,33 +145,50 @@ public class DetectionService : IDetectionService
     public PhotoshopInstallation ClassifyInstallation(PhotoshopInstallation installation)
     {
         _logger.LogInfo($"Clasificando instalación: {installation.DisplayName}");
-        
-        // Implementación preliminar - será completada en futuras iteraciones
-        // según el sistema de puntuación heurística documentado
-        
-        // Por defecto, marcar como desconocido
-        installation.Type = InstallationType.Unknown;
-        
-        // Lógica básica de clasificación
-        if (installation.ConfidenceScore >= 80)
+
+        // Verificar si la ubicación de instalación existe
+        bool locationExists = !string.IsNullOrEmpty(installation.InstallLocation) &&
+                             _fileSystemHelper.DirectoryExists(installation.InstallLocation);
+
+        // Verificar si tiene el ejecutable principal
+        bool hasMainExecutable = false;
+        if (locationExists)
         {
-            installation.Type = InstallationType.Complete;
-            _logger.LogInfo($"Instalación clasificada como completa: {installation.DisplayName}");
+            var exeFiles = _fileSystemHelper.FindFiles(installation.InstallLocation, "Photoshop*.exe");
+            hasMainExecutable = exeFiles.Count > 0;
         }
-        else if (installation.ConfidenceScore >= 40)
+
+        // Por defecto, marcar como desconocido
+        installation.InstallationType = InstallationType.Unknown;
+        installation.IsMainInstallation = false;
+        installation.IsResidual = false;
+
+        // Lógica de clasificación según el sistema de puntuación heurística documentado
+        if (installation.ConfidenceScore >= 5 && locationExists && hasMainExecutable)
         {
-            installation.Type = InstallationType.Partial;
-            _logger.LogInfo($"Instalación clasificada como parcial: {installation.DisplayName}");
+            installation.InstallationType = InstallationType.MainInstallation;
+            installation.IsMainInstallation = true;
+            installation.IsResidual = false;
+            _logger.LogInfo($"Clasificada como instalación principal: {installation.DisplayName}");
+        }
+        else if (installation.ConfidenceScore >= 3 && locationExists)
+        {
+            installation.InstallationType = InstallationType.PossibleMainInstallation;
+            installation.IsMainInstallation = false;
+            installation.IsResidual = false;
+            _logger.LogInfo($"Clasificada como posible instalación principal: {installation.DisplayName}");
         }
         else
         {
-            installation.Type = InstallationType.Residual;
-            _logger.LogInfo($"Instalación clasificada como residual: {installation.DisplayName}");
+            installation.InstallationType = InstallationType.Residual;
+            installation.IsMainInstallation = false;
+            installation.IsResidual = true;
+            _logger.LogInfo($"Clasificada como residual: {installation.DisplayName}");
         }
-        
+
         return installation;
     }
-    
+
     /// <summary>
     /// Enriquece la información de una instalación detectada con datos adicionales.
     /// </summary>
@@ -178,89 +197,89 @@ public class DetectionService : IDetectionService
     public async Task<PhotoshopInstallation> EnrichInstallationInfoAsync(PhotoshopInstallation installation)
     {
         _logger.LogInfo($"Enriqueciendo información de instalación: {installation.DisplayName}");
-        
+
         // Implementación preliminar - será completada en futuras iteraciones
         await Task.Delay(100); // Simulación de trabajo asíncrono
-        
+
         // Calcular puntuación de confianza basada en la información disponible
         int score = 0;
-        
+
         // Verificar si tiene ubicación de instalación
         if (!string.IsNullOrEmpty(installation.InstallLocation))
         {
             score += 30;
             _logger.LogDebug($"Puntuación +30 por tener ubicación de instalación: {installation.InstallLocation}");
         }
-        
+
         // Verificar si tiene string de desinstalación
         if (!string.IsNullOrEmpty(installation.UninstallString))
         {
             score += 30;
             _logger.LogDebug($"Puntuación +30 por tener string de desinstalación");
         }
-        
+
         // Verificar si tiene versión
         if (!string.IsNullOrEmpty(installation.Version))
         {
             score += 20;
             _logger.LogDebug($"Puntuación +20 por tener información de versión: {installation.Version}");
         }
-        
+
         // Verificar si tiene fecha de instalación
         if (installation.InstallDate.HasValue)
         {
             score += 10;
             _logger.LogDebug($"Puntuación +10 por tener fecha de instalación: {installation.InstallDate}");
         }
-        
-        // Verificar si tiene ubicaciones adicionales
-        if (installation.AdditionalLocations.Count > 0)
+
+        // Verificar si tiene archivos asociados
+        if (installation.AssociatedFiles.Count > 0)
         {
             score += 5;
-            _logger.LogDebug($"Puntuación +5 por tener {installation.AdditionalLocations.Count} ubicaciones adicionales");
+            _logger.LogDebug($"Puntuación +5 por tener {installation.AssociatedFiles.Count} archivos asociados");
         }
-        
+
         // Verificar si tiene claves de registro
-        if (installation.RegistryKeys.Count > 0)
+        if (installation.AssociatedRegistryKeys.Count > 0)
         {
             score += 5;
-            _logger.LogDebug($"Puntuación +5 por tener {installation.RegistryKeys.Count} claves de registro");
+            _logger.LogDebug($"Puntuación +5 por tener {installation.AssociatedRegistryKeys.Count} claves de registro");
         }
-        
+
         // Limitar la puntuación a 100
         installation.ConfidenceScore = Math.Min(score, 100);
         _logger.LogInfo($"Puntuación de confianza calculada: {installation.ConfidenceScore}");
-        
+
         return installation;
     }
-    
+
     // Métodos privados que serán implementados en futuras iteraciones
     private List<PhotoshopInstallation> DetectFromInstalledPrograms()
     {
         _logger.LogInfo("Ejecutando detección desde programas instalados...");
-        
+
         try
         {
             // La detección desde programas instalados utiliza el mismo mecanismo que la detección desde el registro,
             // pero filtra específicamente por instalaciones que tienen un desinstalador válido
             var allRegistryInstallations = _registryHelper.FindPhotoshopInstallations();
-            
+
             // Filtrar solo las instalaciones que tienen un string de desinstalación válido
             var programInstallations = allRegistryInstallations
                 .Where(i => !string.IsNullOrEmpty(i.UninstallString))
                 .ToList();
-            
+
             // Marcar estas instalaciones como detectadas por el método de programas instalados
             foreach (var installation in programInstallations)
             {
                 installation.DetectedBy = DetectionMethod.InstalledPrograms;
-                
+
                 // Verificar si el desinstalador existe como archivo
                 if (!string.IsNullOrEmpty(installation.UninstallString))
                 {
                     // Extraer la ruta del archivo del string de desinstalación (puede contener parámetros)
                     string uninstallerPath = installation.UninstallString;
-                    
+
                     // Si el string comienza con comillas, extraer la parte entre comillas
                     if (uninstallerPath.StartsWith("\""))
                     {
@@ -275,7 +294,7 @@ public class DetectionService : IDetectionService
                     {
                         uninstallerPath = uninstallerPath.Split(' ')[0];
                     }
-                    
+
                     // Verificar si el archivo existe
                     if (_fileSystemHelper.FileExists(uninstallerPath))
                     {
@@ -288,11 +307,11 @@ public class DetectionService : IDetectionService
                     }
                 }
             }
-            
+
             if (programInstallations.Count > 0)
             {
                 _logger.LogInfo($"Se encontraron {programInstallations.Count} instalaciones en programas instalados.");
-                
+
                 // Registrar detalles de cada instalación encontrada
                 foreach (var installation in programInstallations)
                 {
@@ -306,7 +325,7 @@ public class DetectionService : IDetectionService
             {
                 _logger.LogInfo("No se encontraron instalaciones de Photoshop en programas instalados.");
             }
-            
+
             return programInstallations;
         }
         catch (Exception ex)
@@ -315,20 +334,20 @@ public class DetectionService : IDetectionService
             return new List<PhotoshopInstallation>();
         }
     }
-    
+
     private List<PhotoshopInstallation> DetectFromRegistry()
     {
         _logger.LogInfo("Ejecutando detección desde el registro de Windows...");
-        
+
         try
         {
             // Utilizar el RegistryHelper para buscar instalaciones en el registro
             var installations = _registryHelper.FindPhotoshopInstallations();
-            
+
             if (installations.Count > 0)
             {
                 _logger.LogInfo($"Se encontraron {installations.Count} instalaciones de Photoshop en el registro.");
-                
+
                 // Registrar detalles de cada instalación encontrada
                 foreach (var installation in installations)
                 {
@@ -342,7 +361,7 @@ public class DetectionService : IDetectionService
             {
                 _logger.LogInfo("No se encontraron instalaciones de Photoshop en el registro.");
             }
-            
+
             return installations;
         }
         catch (Exception ex)
@@ -351,13 +370,13 @@ public class DetectionService : IDetectionService
             return new List<PhotoshopInstallation>();
         }
     }
-    
+
     private List<PhotoshopInstallation> DetectFromFileSystem()
     {
         _logger.LogInfo("Ejecutando detección desde el sistema de archivos...");
-        
+
         var installations = new List<PhotoshopInstallation>();
-        
+
         try
         {
             // Rutas comunes donde se instala Photoshop
@@ -368,7 +387,7 @@ public class DetectionService : IDetectionService
                 @"C:\Program Files\Common Files\Adobe",
                 @"C:\Program Files (x86)\Common Files\Adobe"
             };
-            
+
             foreach (var basePath in commonPaths)
             {
                 if (!_fileSystemHelper.DirectoryExists(basePath))
@@ -376,27 +395,27 @@ public class DetectionService : IDetectionService
                     _logger.LogInfo($"Directorio {basePath} no encontrado, omitiendo...");
                     continue;
                 }
-                
+
                 _logger.LogInfo($"Buscando en directorio: {basePath}");
-                
+
                 // Buscar directorios que contengan "Photoshop"
                 var photoshopDirs = _fileSystemHelper.FindDirectories(basePath, "Photoshop");
-                
+
                 foreach (var dir in photoshopDirs)
                 {
                     _logger.LogInfo($"Directorio potencial de Photoshop encontrado: {dir}");
-                    
+
                     // Verificar si contiene archivos ejecutables de Photoshop
                     var exeFiles = _fileSystemHelper.FindFiles(dir, "Photoshop*.exe");
-                    
+
                     if (exeFiles.Count > 0)
                     {
                         _logger.LogInfo($"Encontrado ejecutable de Photoshop en: {dir}");
-                        
+
                         // Extraer versión del nombre del directorio (si es posible)
                         string version = ExtractVersionFromPath(dir);
                         string displayName = $"Adobe Photoshop {version}".Trim();
-                        
+
                         // Crear una nueva instalación
                         var installation = new PhotoshopInstallation
                         {
@@ -406,15 +425,15 @@ public class DetectionService : IDetectionService
                             EstimatedSize = _fileSystemHelper.GetDirectorySize(dir),
                             DetectedBy = DetectionMethod.FileSystem,
                             ConfidenceScore = 70, // Confianza alta para detecciones de sistema de archivos con ejecutable
-                            AdditionalLocations = new List<string> { dir }
+                            AssociatedFiles = new List<string> { dir }
                         };
-                        
+
                         installations.Add(installation);
                         _logger.LogInfo($"Instalación detectada en sistema de archivos: {displayName}");
                     }
                 }
             }
-            
+
             if (installations.Count > 0)
             {
                 _logger.LogInfo($"Se encontraron {installations.Count} instalaciones de Photoshop en el sistema de archivos.");
@@ -423,7 +442,7 @@ public class DetectionService : IDetectionService
             {
                 _logger.LogInfo("No se encontraron instalaciones de Photoshop en el sistema de archivos.");
             }
-            
+
             return installations;
         }
         catch (Exception ex)
@@ -432,7 +451,7 @@ public class DetectionService : IDetectionService
             return new List<PhotoshopInstallation>();
         }
     }
-    
+
     /// <summary>
     /// Extrae la versión de Photoshop a partir de la ruta de instalación.
     /// </summary>
@@ -444,7 +463,7 @@ public class DetectionService : IDetectionService
         {
             // Intentar extraer la versión del nombre del directorio
             var dirName = Path.GetFileName(path);
-            
+
             // Patrones comunes: "Adobe Photoshop CC 2020", "Photoshop 2021", etc.
             if (dirName.Contains("CC"))
             {
@@ -458,21 +477,21 @@ public class DetectionService : IDetectionService
                     return "CC";
                 }
             }
-            
+
             // Buscar patrón de año (20XX)
             var yearMatch = System.Text.RegularExpressions.Regex.Match(dirName, @"20\d{2}");
             if (yearMatch.Success)
             {
                 return yearMatch.Value;
             }
-            
+
             // Buscar patrón de versión (XX.X)
             var versionMatch = System.Text.RegularExpressions.Regex.Match(dirName, @"\d+\.\d+");
             if (versionMatch.Success)
             {
                 return versionMatch.Value;
             }
-            
+
             return string.Empty;
         }
         catch

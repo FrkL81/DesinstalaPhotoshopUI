@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 public class FileSystemHelper : IFileSystemHelper
 {
     private readonly ILoggingService _logger;
-    
+
     /// <summary>
     /// Inicializa una nueva instancia de la clase FileSystemHelper.
     /// </summary>
@@ -21,7 +22,7 @@ public class FileSystemHelper : IFileSystemHelper
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
+
     /// <summary>
     /// Verifica si un directorio existe.
     /// </summary>
@@ -31,7 +32,7 @@ public class FileSystemHelper : IFileSystemHelper
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
-            
+
         try
         {
             return Directory.Exists(path);
@@ -42,7 +43,7 @@ public class FileSystemHelper : IFileSystemHelper
             return false;
         }
     }
-    
+
     /// <summary>
     /// Verifica si un archivo existe.
     /// </summary>
@@ -52,7 +53,7 @@ public class FileSystemHelper : IFileSystemHelper
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
-            
+
         try
         {
             return File.Exists(path);
@@ -63,7 +64,7 @@ public class FileSystemHelper : IFileSystemHelper
             return false;
         }
     }
-    
+
     /// <summary>
     /// Busca archivos que coincidan con un patrón en un directorio y sus subdirectorios.
     /// </summary>
@@ -74,10 +75,10 @@ public class FileSystemHelper : IFileSystemHelper
     public List<string> FindFiles(string rootPath, string searchPattern, SearchOption searchOption = SearchOption.AllDirectories)
     {
         var result = new List<string>();
-        
+
         if (!DirectoryExists(rootPath))
             return result;
-            
+
         try
         {
             result.AddRange(Directory.GetFiles(rootPath, searchPattern, searchOption));
@@ -85,7 +86,7 @@ public class FileSystemHelper : IFileSystemHelper
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning($"Acceso denegado al buscar archivos en {rootPath}: {ex.Message}");
-            
+
             // Intenta buscar en los subdirectorios a los que sí tenemos acceso
             if (searchOption == SearchOption.AllDirectories)
             {
@@ -113,10 +114,10 @@ public class FileSystemHelper : IFileSystemHelper
         {
             _logger.LogError($"Error al buscar archivos en {rootPath}: {ex.Message}");
         }
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// Obtiene el tamaño de un directorio en bytes.
     /// </summary>
@@ -126,7 +127,7 @@ public class FileSystemHelper : IFileSystemHelper
     {
         if (!DirectoryExists(path))
             return 0;
-            
+
         try
         {
             return Directory.GetFiles(path, "*", SearchOption.AllDirectories)
@@ -138,7 +139,7 @@ public class FileSystemHelper : IFileSystemHelper
             return 0;
         }
     }
-    
+
     /// <summary>
     /// Busca directorios que contengan un nombre específico.
     /// </summary>
@@ -148,17 +149,17 @@ public class FileSystemHelper : IFileSystemHelper
     public List<string> FindDirectories(string rootPath, string directoryNameContains)
     {
         var result = new List<string>();
-        
+
         if (!DirectoryExists(rootPath))
             return result;
-            
+
         try
         {
             // Busca directorios que contengan el texto especificado
             var directories = Directory.GetDirectories(rootPath, "*", SearchOption.AllDirectories)
                 .Where(d => Path.GetFileName(d).Contains(directoryNameContains, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-                
+
             result.AddRange(directories);
         }
         catch (UnauthorizedAccessException ex)
@@ -169,7 +170,76 @@ public class FileSystemHelper : IFileSystemHelper
         {
             _logger.LogError($"Error al buscar directorios en {rootPath}: {ex.Message}");
         }
-        
+
         return result;
+    }
+
+    /// <summary>
+    /// Crea un directorio si no existe.
+    /// </summary>
+    /// <param name="path">Ruta del directorio a crear.</param>
+    /// <returns>True si el directorio se creó o ya existía, false en caso contrario.</returns>
+    public bool CreateDirectory(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        try
+        {
+            if (Directory.Exists(path))
+                return true;
+
+            Directory.CreateDirectory(path);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al crear el directorio {path}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Copia un archivo de forma asíncrona.
+    /// </summary>
+    /// <param name="sourcePath">Ruta del archivo origen.</param>
+    /// <param name="destinationPath">Ruta del archivo destino.</param>
+    /// <param name="overwrite">Indica si se debe sobrescribir el archivo destino si ya existe.</param>
+    /// <param name="cancellationToken">Token para cancelar la operación.</param>
+    /// <returns>Task que representa la operación asíncrona.</returns>
+    public async Task CopyFileAsync(string sourcePath, string destinationPath, bool overwrite = true, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || string.IsNullOrWhiteSpace(destinationPath))
+            throw new ArgumentException("Las rutas de origen y destino no pueden estar vacías.");
+
+        if (!FileExists(sourcePath))
+            throw new FileNotFoundException($"El archivo de origen no existe: {sourcePath}");
+
+        try
+        {
+            // Crear el directorio destino si no existe
+            string? destinationDir = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrEmpty(destinationDir))
+                CreateDirectory(destinationDir);
+
+            // Copiar el archivo de forma asíncrona
+            using (var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true))
+            using (var destinationStream = new FileStream(destinationPath, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true))
+            {
+                await sourceStream.CopyToAsync(destinationStream, 81920, cancellationToken);
+            }
+
+            _logger.LogInfo($"Archivo copiado con éxito de {sourcePath} a {destinationPath}");
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning($"Copia de archivo cancelada: {sourcePath} -> {destinationPath}");
+            throw; // Re-lanzar para que el llamador sepa que fue cancelada
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al copiar el archivo {sourcePath} a {destinationPath}: {ex.Message}");
+            throw; // Re-lanzar para que el llamador pueda manejar el error
+        }
     }
 }
