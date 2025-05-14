@@ -12,6 +12,7 @@ using CustomMsgBoxLibrary;
 using CustomMsgBoxLibrary.Types;
 using DesinstalaPhotoshop.Core.Models;
 using DesinstalaPhotoshop.Core.Services.Helpers;
+using DesinstalaPhotoshop.Core.Services.Interfaces;
 
 namespace DesinstalaPhotoshop.UI
 {
@@ -547,8 +548,97 @@ namespace DesinstalaPhotoshop.UI
 
         private void BtnGenerarScript_Click(object sender, EventArgs e)
         {
-            // Implementación pendiente
-            AppendToConsole("Generando script de limpieza...", Color.White);
+            try
+            {
+                LogInfo("Generando script de limpieza...");
+
+                // Crear instancia del servicio de logging
+                var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
+
+                // Crear instancia del generador de scripts
+                var scriptGenerator = new DesinstalaPhotoshop.Core.Services.ScriptGenerator(loggingService);
+
+                // Extraer comandos reg delete del texto de la consola
+                var regDeleteCommands = scriptGenerator.ExtractRegDeleteCommands(txtConsole.Text);
+
+                if (regDeleteCommands.Count == 0)
+                {
+                    CustomMsgBox.Show(
+                        prompt: "No se encontraron comandos de eliminación de registro en la consola.",
+                        title: "Información",
+                        buttons: CustomMessageBoxButtons.OK,
+                        icon: CustomMessageBoxIcon.Information);
+                    return;
+                }
+
+                // Mostrar diálogo para guardar archivo
+                using (SaveFileDialog saveDialog = new SaveFileDialog())
+                {
+                    saveDialog.Filter = "Archivo por lotes (*.bat)|*.bat|Script de PowerShell (*.ps1)|*.ps1";
+                    saveDialog.Title = "Guardar script de limpieza";
+                    saveDialog.FileName = $"LimpiezaPhotoshop_{DateTime.Now:yyyyMMdd_HHmmss}";
+                    saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // Determinar el tipo de script según la extensión
+                        ScriptType scriptType = saveDialog.FileName.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase)
+                            ? ScriptType.PS1
+                            : ScriptType.BAT;
+
+                        // Generar el script
+                        bool success = scriptGenerator.GenerateCleanupScript(
+                            regDeleteCommands,
+                            saveDialog.FileName,
+                            scriptType);
+
+                        if (success)
+                        {
+                            LogSuccess($"Script de limpieza generado correctamente: {saveDialog.FileName}");
+
+                            // Preguntar si desea abrir el archivo
+                            var result = CustomMsgBox.Show(
+                                prompt: $"Script generado correctamente en:\n{saveDialog.FileName}\n\n¿Desea abrir el archivo ahora?",
+                                title: "Script generado",
+                                buttons: CustomMessageBoxButtons.YesNo,
+                                icon: CustomMessageBoxIcon.Success);
+
+                            if (result == CustomDialogResult.Yes)
+                            {
+                                // Abrir el archivo con la aplicación predeterminada
+                                var psi = new ProcessStartInfo
+                                {
+                                    FileName = saveDialog.FileName,
+                                    UseShellExecute = true
+                                };
+                                Process.Start(psi);
+                            }
+                        }
+                        else
+                        {
+                            LogError("Error al generar el script de limpieza.");
+                            CustomMsgBox.Show(
+                                prompt: "Error al generar el script de limpieza.",
+                                title: "Error",
+                                buttons: CustomMessageBoxButtons.OK,
+                                icon: CustomMessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        LogInfo("Generación de script cancelada por el usuario.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"Error al generar script de limpieza: {ex.Message}");
+                CustomMsgBox.Show(
+                    prompt: $"Error al generar script de limpieza: {ex.Message}",
+                    title: "Error",
+                    buttons: CustomMessageBoxButtons.OK,
+                    icon: CustomMessageBoxIcon.Error);
+            }
         }
 
         private void LstInstallations_SelectedIndexChanged(object sender, EventArgs e)
@@ -580,6 +670,13 @@ namespace DesinstalaPhotoshop.UI
                 }
             }
 
+            // Verificar si hay comandos reg delete en la consola
+            bool hasRegDeleteCommands = false;
+            if (!string.IsNullOrEmpty(txtConsole.Text))
+            {
+                hasRegDeleteCommands = txtConsole.Text.Contains("reg delete", StringComparison.OrdinalIgnoreCase);
+            }
+
             // Verificar si hay una selección en la lista
             bool hasSelection = lstInstallations.SelectedItems.Count > 0;
 
@@ -608,6 +705,9 @@ namespace DesinstalaPhotoshop.UI
 
             // El botón Restaurar está deshabilitado por ahora
             btnRestore.Enabled = false;
+
+            // El botón Generar Script está habilitado si hay comandos reg delete en la consola
+            btnGenerarScript.Enabled = hasRegDeleteCommands;
 
             // Actualizar colores de los botones según su estado
             UpdateButtonColors();
@@ -684,7 +784,16 @@ namespace DesinstalaPhotoshop.UI
             _currentOperation = operationName;
             _animationDots = 0;
             progressBar.Value = 0;
-            lblProgress.Text = $"{_currentOperation} - 0%";
+
+            // Actualizar inmediatamente el texto animado sin esperar al timer
+            _textAnimationState = 0;
+            UpdateAnimatedText();
+
+            // Actualizar texto de progreso con animación de puntos
+            string dots = new string('.', _animationDots);
+            lblProgress.Text = $"{_currentOperation}{dots} - 0%";
+
+            // Iniciar el timer para continuar la animación
             animationTimer.Start();
         }
 
@@ -726,14 +835,17 @@ namespace DesinstalaPhotoshop.UI
 
             progressBar.Value = percentage;
 
-            if (!string.IsNullOrEmpty(statusText))
+            // Texto a mostrar (statusText o _currentOperation)
+            string displayText = !string.IsNullOrEmpty(statusText) ? statusText : _currentOperation;
+
+            // Limitar la longitud del texto para evitar desbordamiento
+            if (displayText.Length > 20)
             {
-                lblProgress.Text = $"{statusText} - {percentage}%";
+                displayText = displayText.Substring(0, 17) + "...";
             }
-            else
-            {
-                lblProgress.Text = $"{_currentOperation} - {percentage}%";
-            }
+
+            // Actualizar el texto de progreso
+            lblProgress.Text = $"{displayText} - {percentage}%";
 
             // Si llegamos al 100%, detener la animación
             if (percentage >= 100)
@@ -874,12 +986,55 @@ namespace DesinstalaPhotoshop.UI
             {
                 if (obj is DesinstalaPhotoshop.Core.Models.PhotoshopInstallation installation)
                 {
+                    // Determinar el emoji según el tipo de instalación
+                    string emoji = string.Empty;
+                    string tooltipText = string.Empty;
+
+                    if (installation.IsMainInstallation)
+                    {
+                        emoji = "✅ "; // Marca de verificación verde para instalación principal
+                        tooltipText = "Instalación principal de Photoshop";
+                    }
+                    else if (installation.InstallationType == DesinstalaPhotoshop.Core.Models.InstallationType.PossibleMainInstallation)
+                    {
+                        emoji = "⚠️ "; // Señal de advertencia para posible instalación principal
+                        tooltipText = "Posible instalación principal de Photoshop";
+                    }
+                    else if (installation.IsResidual)
+                    {
+                        emoji = "🗑️ "; // Papelera para residuos
+                        tooltipText = "Residuos de Photoshop";
+                    }
+
                     // Crear un ListViewItem con la información principal
-                    var item = new ListViewItem(installation.DisplayName);
+                    var item = new ListViewItem(emoji + installation.DisplayName);
                     item.SubItems.Add(installation.Version);
                     item.SubItems.Add(installation.InstallLocation);
                     item.SubItems.Add(installation.InstallationType.ToString());
                     item.SubItems.Add(installation.ConfidenceScore.ToString() + "%");
+
+                    // Configurar el tooltip con información detallada
+                    item.ToolTipText = $"{tooltipText}\n" +
+                                      $"Puntuación de confianza: {installation.ConfidenceScore}%\n" +
+                                      $"Método de detección: {installation.DetectedBy}\n";
+
+                    // Agregar información sobre claves de registro si existen
+                    if (installation.AssociatedRegistryKeys.Count > 0)
+                    {
+                        item.ToolTipText += $"Claves de registro: {installation.AssociatedRegistryKeys.Count}\n";
+                    }
+
+                    // Agregar información sobre archivos asociados si existen
+                    if (installation.AssociatedFiles.Count > 0)
+                    {
+                        item.ToolTipText += $"Archivos asociados: {installation.AssociatedFiles.Count}\n";
+                    }
+
+                    // Agregar notas si existen
+                    if (!string.IsNullOrEmpty(installation.Notes))
+                    {
+                        item.ToolTipText += $"Notas: {installation.Notes}";
+                    }
 
                     // Guardar la referencia a la instalación en el Tag para acceso posterior
                     item.Tag = installation;
@@ -923,7 +1078,15 @@ namespace DesinstalaPhotoshop.UI
 
             // Actualizar texto de progreso con animación de puntos
             string dots = new string('.', _animationDots);
-            lblProgress.Text = $"{_currentOperation}{dots} - {progressBar.Value}%";
+
+            // Limitar la longitud del texto de operación para evitar desbordamiento
+            string operationText = _currentOperation;
+            if (operationText.Length > 20)
+            {
+                operationText = operationText.Substring(0, 17) + "...";
+            }
+
+            lblProgress.Text = $"{operationText}{dots} - {progressBar.Value}%";
         }
 
         #endregion
@@ -1018,6 +1181,9 @@ namespace DesinstalaPhotoshop.UI
                 // Preparar la UI para la operación
                 StartProgressAnimation(operationName);
                 LogInfo($"Iniciando operación: {operationName}");
+
+                // Forzar actualización de la UI para asegurar que la animación sea visible inmediatamente
+                Application.DoEvents();
 
                 // Crear un nuevo token de cancelación
                 _cts = new CancellationTokenSource();

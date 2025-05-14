@@ -1,15 +1,15 @@
 # Progress: DesinstalaPhotoshop
 
 ## 1. Resumen General del Progreso
-El proyecto DesinstalaPhotoshop ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. La estructura general de la aplicación, la configuración del proyecto, el diseño visual del formulario principal y la creación de formularios secundarios están listos. La integración de librerías para iconos y diálogos personalizados también se ha realizado con éxito, aunque queda pendiente actualizar el formulario `RestoreBackupForm` para usar `CustomMsgBox`.
-
-Se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones en lugar de solo reiniciar la UI. La solución implicó proporcionar todas las dependencias necesarias al `DetectionService`, mejorar el manejo de errores y el registro de operaciones, y configurar el modo de desarrollo para permitir pruebas sin permisos elevados.
+El proyecto DesinstalaPhotoshop ha completado la **Etapa 1 (Interfaz de Usuario)**, la **Etapa 2 (Detección de Instalaciones)** y la **Etapa 3 (Limpieza/Desinstalación)**. La estructura general de la aplicación, la configuración del proyecto, el diseño visual del formulario principal y la creación de formularios secundarios están listos. La integración de librerías para iconos y diálogos personalizados también se ha realizado con éxito, aunque queda pendiente actualizar el formulario `RestoreBackupForm` para usar `CustomMsgBox`.
 
 Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc. También se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
 
-Se ha avanzado significativamente en la **Etapa 3 (Limpieza/Desinstalación)** con la implementación del servicio de procesos (`ProcessService`) que permite detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación. También se ha implementado el servicio de desinstalación (`UninstallService`) con soporte para diferentes tipos de desinstaladores y el servicio de copias de seguridad (`BackupService`) para crear y restaurar copias de seguridad.
+Se ha completado la implementación del servicio de limpieza (`CleanupService`), el servicio de desinstalación (`UninstallService`), el servicio de procesos (`ProcessService`) y el servicio de copias de seguridad (`BackupService`). Estos servicios permiten realizar operaciones de limpieza y desinstalación de manera segura y eficaz, con soporte para diferentes tipos de desinstaladores, creación y restauración de copias de seguridad, y detención de procesos y servicios de Adobe antes de realizar operaciones destructivas.
 
-Las próximas tareas se centrarán en completar la implementación del servicio de limpieza (`CleanupService`), seguido por las **Etapas 4 (Funcionalidades Avanzadas) y 5 (Pruebas)**.
+Se ha avanzado significativamente en la **Etapa 4 (Funcionalidades Avanzadas)** con la implementación del generador de scripts (`ScriptGenerator`) que permite crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell). También se han realizado mejoras en la interfaz de usuario, como la implementación de emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, la mejora de las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario, y la corrección del desbordamiento de texto en el panel central.
+
+Las próximas tareas se centrarán en completar la implementación de la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados, seguido por la **Etapa 5 (Pruebas)**.
 
 La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la documentación existente en `ManualDesarrollo/`, y la configuración para la publicación está lista.
 
@@ -61,17 +61,18 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
         *   ✅ Implementar los métodos `DetectFromInstalledPrograms` y `DetectFromFileSystem`.
         *   ✅ Completar el sistema de puntuación heurística (`EnrichInstallationInfoAsync`, `ClassifyInstallation`).
         *   ✅ **PUNTO DE PRUEBA CRÍTICO**: Se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones en lugar de solo reiniciar la UI.
-*   **Etapa 3: Limpieza y Desinstalación (EN PROGRESO)**
-    *   Implementar `CleanupService`. (PARCIALMENTE COMPLETADO)
+*   **Etapa 3: Limpieza y Desinstalación (COMPLETADA)**
+    *   Implementar `CleanupService`. (COMPLETADO)
         *   ✅ Estructura básica e interfaz implementadas
         *   ✅ Integración con el servicio de procesos para detener procesos de Adobe antes de la limpieza
-        *   ⏳ Pendiente: Implementación completa de métodos para limpiar archivos, carpetas y claves de registro
-    *   Implementar `UninstallService`. (PARCIALMENTE COMPLETADO)
+        *   ✅ Implementación completa de métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché
+        *   ✅ Implementación de métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes
+    *   Implementar `UninstallService`. (COMPLETADO)
         *   ✅ Estructura básica e interfaz implementadas
         *   ✅ Soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual)
         *   ✅ Integración con el formulario de opciones de desinstalación
         *   ✅ Integración con el servicio de procesos para detener procesos de Adobe antes de la desinstalación
-        *   ⏳ Pendiente: Implementación completa de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
+        *   ✅ Implementación completa de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
     *   Implementar los servicios auxiliares restantes:
         *   `ProcessService`. (COMPLETADO)
             *   ✅ Detección de procesos de Adobe en ejecución
@@ -82,10 +83,19 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
             *   ✅ Restauración de copias de seguridad
             *   ✅ Gestión de metadatos
     *   ✅ Ya se han implementado: `FileSystemHelper`, `RegistryHelper`.
-*   **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core**
+*   **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core (PARCIALMENTE COMPLETADA)**
     *   ✅ Fase 4.1: Conectar la lógica real del Core a los manejadores de eventos de `MainForm`. Refinar `RunOperationAsync` y el manejo de `IProgress<ProgressInfo>`. (COMPLETADA)
-    *   Fase 4.2: Implementar `ScriptGenerator` y la funcionalidad del botón `btnGenerarScript`.
+    *   ✅ Fase 4.2: Implementar `ScriptGenerator` y la funcionalidad del botón `btnGenerarScript`. (COMPLETADA)
+        *   ✅ Generación de scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell)
+        *   ✅ Extracción de comandos reg delete del texto de la consola
+        *   ✅ Conversión de comandos reg.exe a PowerShell para scripts .ps1
+        *   ✅ Diálogo para que el usuario elija el formato del script y la ubicación donde guardarlo
+        *   ✅ Opción para abrir el script generado con la aplicación predeterminada
     *   Completar Fase 4.3: Finalizar la lógica de privilegios y asegurar que `app.manifest` se cambie a `requireAdministrator` para producción.
+    *   ✅ Mejoras adicionales en la UI:
+        *   ✅ Mejora de las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario
+        *   ✅ Corrección del desbordamiento de texto en el panel central
+        *   ✅ Implementación de emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas
 *   **Etapa 5: Pruebas y Optimización (TODO)**
     *   Todas las fases.
 *   **Etapa 1 / Mantenimiento:**
@@ -98,9 +108,13 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
     * Mejorar el manejo de errores y el registro de operaciones
     * Configurar el modo de desarrollo para permitir pruebas sin permisos elevados
 *   ✅ **Implementación del servicio de procesos**: Se ha implementado el servicio de procesos (`ProcessService`) para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación. Esto es crucial para evitar problemas de bloqueo de archivos durante estas operaciones.
-*   Se ha implementado el servicio de desinstalación (`UninstallService`) con soporte para diferentes tipos de desinstaladores, pero es necesario completar la implementación de los métodos específicos.
-*   Se ha implementado el servicio de copias de seguridad (`BackupService`) para crear y restaurar copias de seguridad antes de operaciones destructivas.
-*   La funcionalidad principal de la aplicación ahora depende de completar la implementación del servicio de limpieza (`CleanupService`) en `DesinstalaPhotoshop.Core`.
+*   ✅ **Implementación del servicio de desinstalación**: Se ha completado la implementación del servicio de desinstalación (`UninstallService`) con soporte para diferentes tipos de desinstaladores y métodos específicos para ejecutar desinstaladores y eliminar productos MSI.
+*   ✅ **Implementación del servicio de copias de seguridad**: Se ha completado la implementación del servicio de copias de seguridad (`BackupService`) para crear y restaurar copias de seguridad antes de operaciones destructivas.
+*   ✅ **Implementación del servicio de limpieza**: Se ha completado la implementación del servicio de limpieza (`CleanupService`) con métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché.
+*   ✅ **Implementación del generador de scripts**: Se ha completado la implementación del generador de scripts (`ScriptGenerator`) para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell).
+*   ✅ **Mejora de las animaciones de progreso**: Se ha mejorado la retroalimentación visual durante las operaciones largas para evitar la sensación de que la aplicación está congelada.
+*   ✅ **Corrección del desbordamiento de texto**: Se ha corregido el problema de desbordamiento de texto en el panel central, manteniendo una apariencia limpia y profesional de la interfaz.
+*   ✅ **Implementación de emojis en el DataGrid**: Se han incluido emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, mejorando la experiencia del usuario.
 *   ✅ La lógica de `UpdateButtonsState` en `MainForm` ahora funciona correctamente con la información de `_detectedInstallations` proporcionada por el `DetectionService`.
 *   ✅ El reporte de progreso ahora utiliza el modelo `ProgressInfo` implementado, que proporciona una estructura clara para informar sobre el estado de las operaciones.
 *   ✅ Se ha implementado una versión completa de `ProgressInfo` en el proyecto Core y UI.
@@ -108,8 +122,13 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
 *   ✅ Se han implementado los servicios auxiliares (`FileSystemHelper`, `RegistryHelper`) necesarios para la funcionalidad de `DetectionService`.
 *   ✅ Se ha implementado un sistema de puntuación heurística completo para clasificar las instalaciones detectadas, siguiendo las directrices de `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md`.
 *   ✅ Se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
+*   Es necesario implementar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados.
 
 ## 5. Historial de Decisiones Clave (implícito o reciente)
+*   **Implementación del generador de scripts**: Se ha decidido implementar el generador de scripts (`ScriptGenerator`) para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell), permitiendo a los usuarios ejecutar operaciones de limpieza sin necesidad de la aplicación.
+*   **Mejora de las animaciones de progreso**: Se ha decidido mejorar las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario cuando se inicia una operación, evitando la sensación de que la aplicación está congelada.
+*   **Corrección del desbordamiento de texto**: Se ha decidido ajustar las propiedades del control lblProgress para evitar que el texto se desborde del panel central, manteniendo una apariencia limpia y profesional de la interfaz.
+*   **Implementación de emojis en el DataGrid**: Se ha decidido incluir emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, mejorando la experiencia del usuario.
 *   **Implementación del servicio de procesos**: Se ha decidido implementar el servicio de procesos (`ProcessService`) para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación. Esto es crucial para evitar problemas de bloqueo de archivos durante estas operaciones.
 *   **Integración del servicio de procesos con los servicios de limpieza y desinstalación**: Se ha decidido integrar el servicio de procesos con los servicios de limpieza y desinstalación para asegurar que todos los procesos y servicios de Adobe estén detenidos antes de realizar operaciones destructivas.
 *   **Implementación del servicio de desinstalación**: Se ha decidido implementar el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos.

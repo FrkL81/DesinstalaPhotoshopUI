@@ -130,7 +130,7 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
     *   ✅ Conectar la lógica de clasificación con la actualización de la UI en `MainForm` (`lstInstallations`, iconos, tooltips).
 *   **Revisar**: `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md` (criterios y algoritmo), `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md` (impacto en la UI).
 
-### Etapa 3: Limpieza y Desinstalación ⚠️ **PARCIALMENTE COMPLETADA**
+### Etapa 3: Limpieza y Desinstalación ✅ **COMPLETADA**
 
 **Objetivo**: Desarrollar la funcionalidad para desinstalar Photoshop y limpiar todos sus residuos de manera segura y eficaz.
 
@@ -165,16 +165,17 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
         *   ✅ `DeleteDirectory`: Para eliminar un directorio y, opcionalmente, su contenido
 *   **Revisar**: `ManualDesarrollo/ResiduosDePhotoshop.md` (qué limpiar), `ManualDesarrollo/08_Formatos_Salida.md` (reportes de elementos no eliminados).
 
-#### Fase 3.2: Servicio de Desinstalación (`UninstallService`) ⚠️ **PARCIALMENTE COMPLETADA**
+#### Fase 3.2: Servicio de Desinstalación (`UninstallService`) ✅ **COMPLETADA**
 *   **Tareas**:
     *   ✅ Implementar `UninstallService` en `DesinstalaPhotoshop.Core`.
     *   ✅ Implementar la estructura básica de `UninstallAsync` y sus métodos auxiliares.
     *   ✅ Implementar soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual).
     *   ✅ Integrar con el formulario `UninstallOptionsForm` para opciones de desinstalación.
-    *   ⏳ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI.
+    *   ✅ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI.
+    *   ✅ Integrar con el servicio de procesos para detener procesos de Adobe antes de la desinstalación.
 *   **Revisar**: `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (estrategias de desinstalación).
 
-#### Fase 3.3: Servicios Auxiliares (Helpers y Servicios de Soporte) ⚠️ **PARCIALMENTE COMPLETADA**
+#### Fase 3.3: Servicios Auxiliares (Helpers y Servicios de Soporte) ✅ **COMPLETADA**
 *   **Tareas**:
     *   ✅ **`FileSystemHelper`**: Implementados métodos básicos para operaciones con archivos y directorios.
     *   ✅ **`RegistryHelper`**: Implementados métodos básicos para operaciones con el registro.
@@ -206,10 +207,14 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
         *   Configurar el modo de desarrollo para permitir pruebas sin permisos elevados
 *   **Revisar**: `ManualDesarrollo/05_Flujo_Aplicacion.md` (flujo general y de operaciones asíncronas).
 
-#### Fase 4.2: Generación de Scripts 🛑 **NO INICIADA**
+#### Fase 4.2: Generación de Scripts ✅ **COMPLETADA**
 *   **Tareas**:
-    *   ⏳ Implementar `ScriptGenerator` en `DesinstalaPhotoshop.Core` con el método `GenerateCleanupScript` según `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
-    *   ⏳ Implementar la funcionalidad del botón `btnGenerarScript` en `MainForm` para permitir al usuario guardar scripts `.bat` o `.ps1`.
+    *   ✅ Implementar `ScriptGenerator` en `DesinstalaPhotoshop.Core` con el método `GenerateCleanupScript` según `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
+    *   ✅ Implementar la funcionalidad del botón `btnGenerarScript` en `MainForm` para permitir al usuario guardar scripts `.bat` o `.ps1`.
+    *   ✅ Implementar la extracción de comandos reg delete del texto de la consola.
+    *   ✅ Implementar la conversión de comandos reg.exe a PowerShell para scripts .ps1.
+    *   ✅ Implementar un diálogo para que el usuario elija el formato del script y la ubicación donde guardarlo.
+    *   ✅ Implementar la opción para abrir el script generado con la aplicación predeterminada.
 *   **Revisar**: `ManualDesarrollo/08_Formatos_Salida.md` (estructura de scripts), `ManualDesarrollo/02_Objetivos_Proyecto.md` (requisitos de generación de scripts).
 
 #### Fase 4.3: Integración con Sistema (Admin) ⚠️**PARCIALMENTE COMPLETADA**
@@ -298,22 +303,24 @@ Consultar `ManualDesarrollo/10_Anexos.md` para detalles de versiones y configura
 ## 7. Estado Actual y Próximos Pasos
 
 ### Estado Actual (Mayo 2025)
-El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. Se ha avanzado significativamente en la **Etapa 3 (Limpieza y Desinstalación)** con la implementación completa del servicio de limpieza (`CleanupService`), la implementación parcial del servicio de desinstalación (`UninstallService`), la implementación completa del servicio de copias de seguridad (`BackupService`) y la implementación completa del servicio de procesos (`ProcessService`).
+El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)**, la **Etapa 2 (Detección de Instalaciones)** y la **Etapa 3 (Limpieza y Desinstalación)**. Se ha avanzado significativamente en la **Etapa 4 (Funcionalidades Avanzadas)** con la implementación del generador de scripts (`ScriptGenerator`) y mejoras en la interfaz de usuario.
 
 Se han implementado todos los servicios auxiliares necesarios para la detección y se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones.
 
 Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc.
 
-Se ha implementado el servicio de limpieza con métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché. También se han implementado métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes al reiniciar el sistema. Se ha implementado la clase auxiliar `NativeMethods` para acceder a métodos nativos de Windows (MoveFileEx).
+Se ha completado la implementación del servicio de limpieza (`CleanupService`) con métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché. También se han implementado métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes al reiniciar el sistema. Se ha implementado la clase auxiliar `NativeMethods` para acceder a métodos nativos de Windows (MoveFileEx).
 
-Se ha implementado el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos. También se ha implementado el servicio de copias de seguridad para crear y restaurar copias de seguridad antes de operaciones destructivas.
+Se ha completado la implementación del servicio de desinstalación (`UninstallService`) con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos. También se ha implementado el servicio de copias de seguridad (`BackupService`) para crear y restaurar copias de seguridad antes de operaciones destructivas.
 
-Se ha implementado el servicio de procesos para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación, lo que es crucial para evitar problemas de bloqueo de archivos durante estas operaciones. Este servicio se ha integrado con los servicios de limpieza y desinstalación.
+Se ha implementado el servicio de procesos (`ProcessService`) para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación, lo que es crucial para evitar problemas de bloqueo de archivos durante estas operaciones. Este servicio se ha integrado con los servicios de limpieza y desinstalación.
+
+Se ha implementado el generador de scripts (`ScriptGenerator`) que permite crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell). También se han realizado mejoras en la interfaz de usuario, como la implementación de emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, la mejora de las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario, y la corrección del desbordamiento de texto en el panel central.
 
 ### Próximos Pasos Prioritarios
 1. **Completar la implementación del servicio de desinstalación**:
    - ✅ Desarrollar `UninstallService` con soporte para diferentes métodos de desinstalación
-   - ⏳ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
+   - ✅ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
 
 2. **Implementar el servicio de limpieza**:
    - ✅ Desarrollar `CleanupService` para eliminar residuos de instalaciones
@@ -328,9 +335,17 @@ Se ha implementado el servicio de procesos para detener procesos y servicios de 
    - ✅ Desarrollar `ProcessService` para detener procesos de Adobe antes de la desinstalación/limpieza
 
 5. **Implementar el generador de scripts**:
-   - ⏳ Desarrollar `ScriptGenerator` para generar scripts de limpieza y desinstalación
+   - ✅ Desarrollar `ScriptGenerator` para generar scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell)
+   - ✅ Implementar la extracción de comandos reg delete del texto de la consola
+   - ✅ Implementar la conversión de comandos reg.exe a PowerShell para scripts .ps1
+   - ✅ Implementar un diálogo para que el usuario elija el formato del script y la ubicación donde guardarlo
 
-6. **Implementar la integración con el sistema**:
+6. **Mejorar la interfaz de usuario**:
+   - ✅ Implementar emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas
+   - ✅ Mejorar las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario
+   - ✅ Corregir el desbordamiento de texto en el panel central
+
+7. **Implementar la integración con el sistema**:
    - ⏳ Desarrollar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados
 
 ## 8. Conclusión

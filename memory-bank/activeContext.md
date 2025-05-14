@@ -1,7 +1,7 @@
 # Active Context: DesinstalaPhotoshop
 
 ## 1. Tarea/Feature Activa Actual
-El foco principal continúa en la implementación de la **Etapa 3: Limpieza y Desinstalación** del `PlanDesarrollo.md`. Se ha completado la implementación del servicio de limpieza (`CleanupService`), el servicio de desinstalación (`UninstallService`) y el servicio de procesos (`ProcessService`).
+El foco principal se ha ampliado para incluir la **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core** del `PlanDesarrollo.md`. Se ha completado la implementación del servicio de limpieza (`CleanupService`), el servicio de desinstalación (`UninstallService`), el servicio de procesos (`ProcessService`) y ahora se ha implementado el generador de scripts (`ScriptGenerator`).
 
 Específicamente:
 1.  ✅ **Fase 3.2: Servicio de Desinstalación (`UninstallService`):** Se ha implementado `UninstallService.cs` en `DesinstalaPhotoshop.Core` con sus métodos principales:
@@ -36,6 +36,39 @@ Específicamente:
         * `StopAdobeServicesAsync`: Detiene todos los servicios de Windows relacionados con Adobe
 
 ## 2. Cambios Recientes (Resumen)
+*   **Implementación del Generador de Scripts (`ScriptGenerator`)**: Se ha implementado el generador de scripts con las siguientes funcionalidades:
+    *   Generación de scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell)
+    *   Extracción de comandos reg delete del texto de la consola
+    *   Conversión de comandos reg.exe a PowerShell para scripts .ps1
+    *   Diálogo para que el usuario elija el formato del script y la ubicación donde guardarlo
+    *   Opción para abrir el script generado con la aplicación predeterminada
+
+*   **Mejora de Animaciones de Progreso**: Se han realizado mejoras en las animaciones de progreso:
+    *   Reducción del intervalo del timer de animación de 500ms a 200ms para una animación más fluida
+    *   Modificación del método PrepareUIForOperation para actualizar inmediatamente el texto animado
+    *   Adición de Application.DoEvents() en el método RunOperationAsync para forzar la actualización de la UI
+    *   Implementación de una animación de puntos suspensivos más visible desde el inicio de las operaciones
+
+*   **Corrección del Desbordamiento de Texto en el Panel Central**: Se han realizado ajustes en el control lblProgress:
+    *   Cambio de alineación de AnchorStyles.Bottom | AnchorStyles.Right a AnchorStyles.Left | AnchorStyles.Right
+    *   Desactivación de AutoSize para evitar que el texto se expanda más allá del panel
+    *   Ajuste del ancho para ocupar todo el panel central
+    *   Configuración de TextAlign a ContentAlignment.MiddleLeft
+    *   Limitación de la longitud del texto de operación a 20 caracteres
+
+*   **Implementación de Emojis y Mejora de Visualización en el DataGrid**: Se ha mejorado la visualización en el DataGrid:
+    *   Inclusión de emojis según el tipo de instalación:
+        *   ✅ Marca de verificación verde para instalaciones principales
+        *   ⚠️ Señal de advertencia para posibles instalaciones principales
+        *   🗑️ Papelera para residuos (incluyendo claves de registro)
+    *   Mejora de los tooltips con información detallada:
+        *   Tipo de instalación
+        *   Puntuación de confianza
+        *   Método de detección
+        *   Número de claves de registro asociadas
+        *   Número de archivos asociados
+        *   Notas adicionales
+
 *   **Implementación completa del servicio de limpieza (`CleanupService`)**: Se ha completado la implementación del servicio de limpieza con los siguientes métodos:
     *   Métodos de limpieza:
         *   `CleanupTempFilesAsync`: Para limpiar archivos temporales de Photoshop
@@ -92,10 +125,15 @@ Específicamente:
 3.  ✅ **Implementar `ProcessService` (Fase 3.3):** Se ha completado la implementación del servicio para detener procesos y servicios de Adobe antes de la desinstalación/limpieza.
 4.  ✅ **Implementar `BackupService` (Fase 3.3):** Se ha completado la implementación del servicio de copias de seguridad para crear y restaurar copias de seguridad antes de operaciones destructivas.
 5.  **Actualizar `RestoreBackupForm`:** Modificar este formulario para usar `CustomMsgBox.Show()` en lugar de `MessageBox.Show()` para mantener la consistencia en la interfaz de usuario.
-6.  **Implementar `ScriptGenerator` (Fase 4.2):** Crear `ScriptGenerator.cs` en `DesinstalaPhotoshop.Core/Services/` para generar scripts de limpieza y desinstalación.
+6.  ✅ **Implementar `ScriptGenerator` (Fase 4.2):** Se ha completado la implementación del generador de scripts para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell).
 7.  **Implementar integración con el sistema (Fase 4.3):** Implementar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados.
+8.  **Mejorar la documentación:** Actualizar la documentación para reflejar los cambios recientes y las nuevas funcionalidades implementadas.
 
 ## 4. Decisiones Recientes
+*   **Implementación del generador de scripts**: Se ha decidido implementar el generador de scripts (`ScriptGenerator`) para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell), permitiendo a los usuarios ejecutar operaciones de limpieza sin necesidad de la aplicación.
+*   **Mejora de las animaciones de progreso**: Se ha decidido mejorar las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario cuando se inicia una operación, evitando la sensación de que la aplicación está congelada.
+*   **Corrección del desbordamiento de texto**: Se ha decidido ajustar las propiedades del control lblProgress para evitar que el texto se desborde del panel central, manteniendo una apariencia limpia y profesional de la interfaz.
+*   **Implementación de emojis en el DataGrid**: Se ha decidido incluir emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, mejorando la experiencia del usuario.
 *   **Implementación del servicio de procesos**: Se ha decidido implementar el servicio de procesos (`ProcessService`) para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación. Esto es crucial para evitar problemas de bloqueo de archivos durante estas operaciones.
 *   **Integración del servicio de procesos con los servicios de limpieza y desinstalación**: Se ha decidido integrar el servicio de procesos con los servicios de limpieza y desinstalación para asegurar que todos los procesos y servicios de Adobe estén detenidos antes de realizar operaciones destructivas.
 *   **Implementación del servicio de desinstalación**: Se ha decidido implementar el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos.
@@ -112,17 +150,24 @@ Específicamente:
 *   ✅ **Implementación completa de `CleanupService`**: Se ha completado la implementación del servicio de limpieza con métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché.
 *   ✅ **Implementación de métodos específicos en `UninstallService`**: Se ha completado la implementación del servicio de desinstalación con soporte para diferentes tipos de desinstaladores.
 *   ✅ **Implementación de `ProcessService`**: Se ha completado la implementación del servicio para detener procesos y servicios de Adobe antes de la desinstalación/limpieza.
-*   **Implementación de `ScriptGenerator`**: Es necesario implementar el generador de scripts para crear scripts de limpieza y desinstalación.
+*   ✅ **Implementación de `ScriptGenerator`**: Se ha completado la implementación del generador de scripts para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell).
 *   **Implementación de integración con el sistema**: Es necesario implementar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados.
 *   ✅ **Problema resuelto con la funcionalidad de detección**: Se ha corregido el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones en lugar de solo reiniciar la UI. La solución implicó:
     * Proporcionar todas las dependencias necesarias al `DetectionService`
     * Mejorar el manejo de errores y el registro de operaciones
     * Configurar el modo de desarrollo para permitir pruebas sin permisos elevados
+*   ✅ **Mejora de las animaciones de progreso**: Se ha mejorado la retroalimentación visual durante las operaciones largas para evitar la sensación de que la aplicación está congelada.
+*   ✅ **Corrección del desbordamiento de texto**: Se ha corregido el problema de desbordamiento de texto en el panel central, manteniendo una apariencia limpia y profesional de la interfaz.
+*   ✅ **Implementación de emojis en el DataGrid**: Se han incluido emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, mejorando la experiencia del usuario.
 *   La lógica de `UpdateButtonsState` en `MainForm.cs` ahora funciona correctamente con la información de `_detectedInstallations` proporcionada por el `DetectionService`.
 *   ✅ Se ha implementado un sistema de puntuación heurística completo para clasificar las instalaciones detectadas, siguiendo las directrices de `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md`.
 *   Es necesario implementar la validación de permisos de administrador en todos los formularios que realicen operaciones críticas.
 
 ## 6. Aprendizajes Clave Recientes
+*   **Valor del generador de scripts**: La implementación del generador de scripts ha demostrado ser muy útil para proporcionar a los usuarios una forma de realizar operaciones de limpieza sin necesidad de la aplicación, especialmente en sistemas donde no se pueden instalar aplicaciones adicionales.
+*   **Importancia de la retroalimentación visual inmediata**: La mejora de las animaciones de progreso ha demostrado la importancia de proporcionar retroalimentación visual inmediata al usuario cuando se inicia una operación, evitando la sensación de que la aplicación está congelada.
+*   **Valor de la corrección del desbordamiento de texto**: La corrección del problema de desbordamiento de texto en el panel central ha mejorado significativamente la apariencia y profesionalidad de la interfaz de usuario.
+*   **Beneficios de los emojis en la UI**: La implementación de emojis en el DataGrid ha mejorado la experiencia del usuario al proporcionar una forma rápida y visual de diferenciar los tipos de instalaciones detectadas.
 *   **Importancia de la limpieza completa**: La implementación del servicio de limpieza ha demostrado la importancia de realizar una limpieza completa del sistema para eliminar todos los residuos de Photoshop, incluyendo archivos temporales, entradas del registro, archivos de configuración y caché.
 *   **Valor de los métodos auxiliares**: La implementación de métodos auxiliares como `ProcessCommonFilesDirectoriesAsync`, `ForceDeleteCommonFilesDirectoryAsync`, `ScheduleFilesForDeletionAsync`, etc., ha demostrado ser muy útil para organizar el código y facilitar su mantenimiento.
 *   **Importancia de la programación de eliminación de archivos persistentes**: La implementación de métodos para programar la eliminación de archivos persistentes al reiniciar el sistema ha demostrado ser muy útil para eliminar archivos que no se pueden eliminar durante la ejecución normal de la aplicación.
