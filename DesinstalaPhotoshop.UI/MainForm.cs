@@ -146,6 +146,7 @@ namespace DesinstalaPhotoshop.UI
                         var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
                         var registryHelper = new DesinstalaPhotoshop.Core.Services.Helpers.RegistryHelper(loggingService);
                         var fileSystemHelper = new DesinstalaPhotoshop.Core.Services.Helpers.FileSystemHelper(loggingService);
+                        var processService = new DesinstalaPhotoshop.Core.Services.ProcessService(loggingService);
 
                         // Crear una instancia del servicio de detección con todos los servicios necesarios
                         var detectionService = new DesinstalaPhotoshop.Core.Services.DetectionService(
@@ -252,6 +253,7 @@ namespace DesinstalaPhotoshop.UI
                             var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
                             var registryHelper = new DesinstalaPhotoshop.Core.Services.Helpers.RegistryHelper(loggingService);
                             var fileSystemHelper = new DesinstalaPhotoshop.Core.Services.Helpers.FileSystemHelper(loggingService);
+                            var processService = new DesinstalaPhotoshop.Core.Services.ProcessService(loggingService);
                             var backupService = new DesinstalaPhotoshop.Core.Services.BackupService(loggingService, fileSystemHelper, registryHelper);
 
                             // Crear una instancia del servicio de desinstalación
@@ -259,7 +261,8 @@ namespace DesinstalaPhotoshop.UI
                                 loggingService,
                                 fileSystemHelper,
                                 registryHelper,
-                                backupService);
+                                backupService,
+                                processService);
 
                             // Ejecutar la desinstalación
                             LogInfo($"Iniciando desinstalación de {selectedInstallation.DisplayName}...");
@@ -316,30 +319,126 @@ namespace DesinstalaPhotoshop.UI
 
         private async void BtnCleanup_Click(object sender, EventArgs e)
         {
-            // Implementación pendiente - Esta operación requiere permisos elevados
-            LogInfo("Limpiando residuos de Photoshop...");
+            // Esta operación requiere permisos elevados
+            LogInfo("Preparando limpieza de residuos de Photoshop...");
 
-            // Actualizar información de progreso para demostración
-            UpdateInfoProgress(0, 4);
+            // Verificar si hay una instalación seleccionada
+            if (lstInstallations.SelectedItems.Count == 0)
+            {
+                CustomMsgBox.Show(
+                    prompt: "Debe seleccionar una instalación para limpiar sus residuos.",
+                    title: "Selección requerida",
+                    buttons: CustomMessageBoxButtons.OK,
+                    icon: CustomMessageBoxIcon.Warning);
+                return;
+            }
 
-            // Ejemplo de uso del método RunOperationAsync con requiresElevation=true
-            await RunOperationAsync<bool>(
-                async (progress, token) =>
+            // Obtener la instalación seleccionada
+            if (lstInstallations.SelectedItems[0].Tag is not PhotoshopInstallation selectedInstallation)
+            {
+                LogError("Error al obtener la instalación seleccionada.");
+                return;
+            }
+
+            // Mostrar opciones de limpieza
+            using (var form = new CleanupOptionsForm())
+            {
+                if (form.ShowDialog() != DialogResult.OK)
                 {
-                    // Simulación de operación con actualización de progreso
-                    for (int i = 1; i <= 4; i++)
-                    {
-                        await Task.Delay(1200, token);
-                        UpdateInfoProgress(i, 4);
-                        progress.Report(ProgressInfo.Running(i * 25, "Limpiando residuos", $"Limpieza {i} de 4 completada"));
-                    }
+                    LogInfo("Limpieza cancelada por el usuario.");
+                    return;
+                }
 
-                    LogSuccess("Limpieza completada con éxito.");
-                    progress.Report(ProgressInfo.Completed("Limpieza", "Limpieza completada con éxito."));
-                    return true;
-                },
-                "Limpiando residuos",
-                requiresElevation: true);
+                // Confirmar la limpieza
+                var result = CustomMsgBox.Show(
+                    prompt: $"¿Está seguro de que desea limpiar los residuos de {selectedInstallation.DisplayName}?\n\nEsta operación no se puede deshacer.",
+                    title: "Confirmar limpieza",
+                    buttons: CustomMessageBoxButtons.YesNo,
+                    icon: CustomMessageBoxIcon.Warning);
+
+                if (result != CustomDialogResult.Yes)
+                {
+                    LogInfo("Limpieza cancelada por el usuario.");
+                    return;
+                }
+
+                // Actualizar información de progreso inicial
+                UpdateInfoProgress(0, 5);
+
+                // Usar el método RunOperationAsync con requiresElevation=true
+                await RunOperationAsync<OperationResult>(
+                    async (progress, token) =>
+                    {
+                        try
+                        {
+                            // Crear instancias de los servicios necesarios
+                            var loggingService = new DesinstalaPhotoshop.Core.Services.LoggingService();
+                            var registryHelper = new DesinstalaPhotoshop.Core.Services.Helpers.RegistryHelper(loggingService);
+                            var fileSystemHelper = new DesinstalaPhotoshop.Core.Services.Helpers.FileSystemHelper(loggingService);
+                            var processService = new DesinstalaPhotoshop.Core.Services.ProcessService(loggingService);
+                            var backupService = new DesinstalaPhotoshop.Core.Services.BackupService(loggingService, fileSystemHelper, registryHelper);
+
+                            // Crear una instancia del servicio de limpieza
+                            var cleanupService = new DesinstalaPhotoshop.Core.Services.CleanupService(
+                                loggingService,
+                                backupService,
+                                processService,
+                                fileSystemHelper,
+                                registryHelper);
+
+                            // Ejecutar la limpieza
+                            LogInfo($"Iniciando limpieza de residuos para {selectedInstallation.DisplayName}...");
+                            var result = await cleanupService.CleanupAsync(
+                                selectedInstallation,
+                                form.CreateBackup,
+                                form.WhatIfMode,
+                                form.CleanupTempFiles,
+                                form.CleanupRegistry,
+                                form.CleanupConfigFiles,
+                                form.CleanupCacheFiles,
+                                new Progress<DesinstalaPhotoshop.Core.Models.ProgressInfo>(p =>
+                                {
+                                    // Convertir de Core.Models.ProgressInfo a UI.Models.ProgressInfo
+                                    var uiProgress = new DesinstalaPhotoshop.UI.Models.ProgressInfo(
+                                        p.ProgressPercentage,
+                                        p.OperationTitle,
+                                        p.StatusMessage,
+                                        p.OperationStatus);
+                                    progress.Report(uiProgress);
+                                }),
+                                token);
+
+                            if (result.Success)
+                            {
+                                LogSuccess($"Limpieza completada con éxito: {result.Message}");
+
+                                // Actualizar la lista de instalaciones (volver a detectar)
+                                if (!form.WhatIfMode)
+                                {
+                                    LogInfo("Actualizando lista de instalaciones...");
+                                    BtnDetect_Click(this, EventArgs.Empty);
+                                }
+                            }
+                            else
+                            {
+                                LogError($"Error durante la limpieza: {result.Message}");
+                            }
+
+                            return result;
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"Error durante la limpieza: {ex.Message}");
+                            if (ex.InnerException != null)
+                            {
+                                LogError($"Error interno: {ex.InnerException.Message}");
+                            }
+                            throw;
+                        }
+                    },
+                    "Limpiando residuos",
+                    requiresElevation: true);
+            }
         }
 
         private void BtnTestMode_Click(object sender, EventArgs e)

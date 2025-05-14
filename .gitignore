@@ -85,7 +85,7 @@ TMP.md
 *_wpftmp.csproj
 
 # Archivos específicos del proyecto que queremos mantener
-#PlanDesarrollo.md
-#README.md
-#ManualDesarrollo/
-#memory-bank/
+!PlanDesarrollo.md
+!README.md
+!ManualDesarrollo/
+!memory-bank/

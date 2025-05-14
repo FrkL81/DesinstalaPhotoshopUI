@@ -18,28 +18,32 @@ public class CleanupService : ICleanupService
 {
     private readonly ILoggingService _logger;
     private readonly IBackupService _backupService;
+    private readonly IProcessService _processService;
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IRegistryHelper _registryHelper;
-    
+
     /// <summary>
     /// Inicializa una nueva instancia de la clase <see cref="CleanupService"/>.
     /// </summary>
     /// <param name="logger">Servicio de registro.</param>
     /// <param name="backupService">Servicio de respaldo.</param>
+    /// <param name="processService">Servicio para gestionar procesos.</param>
     /// <param name="fileSystemHelper">Ayudante para operaciones con el sistema de archivos.</param>
     /// <param name="registryHelper">Ayudante para operaciones con el registro.</param>
     public CleanupService(
         ILoggingService logger,
         IBackupService backupService,
+        IProcessService processService,
         IFileSystemHelper fileSystemHelper,
         IRegistryHelper registryHelper)
     {
         _logger = logger;
         _backupService = backupService;
+        _processService = processService;
         _fileSystemHelper = fileSystemHelper;
         _registryHelper = registryHelper;
     }
-    
+
     /// <summary>
     /// Limpia residuos de Adobe Photoshop del sistema.
     /// </summary>
@@ -66,9 +70,9 @@ public class CleanupService : ICleanupService
     {
         _logger.LogInfo($"Iniciando limpieza de residuos para {installation.DisplayName}...");
         progress?.Report(ProgressInfo.Running(0, "Limpieza", "Iniciando limpieza de residuos..."));
-        
+
         var result = new OperationResult { Success = true };
-        
+
         try
         {
             // Crear copia de seguridad si se solicita
@@ -76,49 +80,73 @@ public class CleanupService : ICleanupService
             {
                 progress?.Report(ProgressInfo.Running(5, "Limpieza", "Creando copia de seguridad..."));
                 _logger.LogInfo("Creando copia de seguridad antes de la limpieza...");
-                
+
                 string backupId = await _backupService.CreateBackupForCleanupAsync(
                     installation,
                     progress,
                     cancellationToken);
-                
+
                 result.BackupId = backupId;
                 _logger.LogInfo($"Copia de seguridad creada con ID: {backupId}");
-                
+
                 progress?.Report(ProgressInfo.Running(20, "Limpieza", "Copia de seguridad completada."));
             }
-            
+
             // Verificar si es una simulación
             if (whatIf)
             {
                 _logger.LogInfo("Ejecutando en modo de simulación (WhatIf). No se realizarán cambios reales.");
                 progress?.Report(ProgressInfo.Running(25, "Limpieza", "Modo de simulación activado. No se realizarán cambios reales."));
             }
-            
+
+            // Detener procesos de Adobe para evitar bloqueos de archivos
+            progress?.Report(ProgressInfo.Running(30, "Limpieza", "Deteniendo procesos de Adobe..."));
+            _logger.LogInfo("Deteniendo procesos de Adobe antes de la limpieza...");
+
+            var processResult = await _processService.StopAdobeProcessesAsync(
+                whatIf,
+                progress,
+                cancellationToken);
+
+            if (!processResult.Success)
+            {
+                _logger.LogWarning($"Advertencia al detener procesos: {processResult.Message}");
+                progress?.Report(ProgressInfo.Warning("Limpieza", $"Algunos procesos no pudieron detenerse: {processResult.Message}"));
+            }
+            else
+            {
+                _logger.LogInfo($"Procesos de Adobe detenidos: {processResult.Message}");
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return OperationResult.Canceled("Limpieza cancelada por el usuario.");
+            }
+
             // Limpiar archivos temporales
             if (cleanupTempFiles)
             {
-                progress?.Report(ProgressInfo.Running(30, "Limpieza", "Limpiando archivos temporales..."));
+                progress?.Report(ProgressInfo.Running(40, "Limpieza", "Limpiando archivos temporales..."));
                 await CleanupTempFilesAsync(installation, whatIf, progress, cancellationToken);
-                progress?.Report(ProgressInfo.Running(40, "Limpieza", "Archivos temporales limpiados."));
+                progress?.Report(ProgressInfo.Running(50, "Limpieza", "Archivos temporales limpiados."));
             }
-            
+
             // Limpiar entradas del registro
             if (cleanupRegistry)
             {
-                progress?.Report(ProgressInfo.Running(50, "Limpieza", "Limpiando entradas del registro..."));
+                progress?.Report(ProgressInfo.Running(60, "Limpieza", "Limpiando entradas del registro..."));
                 await CleanupRegistryAsync(installation, whatIf, progress, cancellationToken);
-                progress?.Report(ProgressInfo.Running(60, "Limpieza", "Entradas del registro limpiadas."));
+                progress?.Report(ProgressInfo.Running(70, "Limpieza", "Entradas del registro limpiadas."));
             }
-            
+
             // Limpiar archivos de configuración
             if (cleanupConfigFiles)
             {
-                progress?.Report(ProgressInfo.Running(70, "Limpieza", "Limpiando archivos de configuración..."));
+                progress?.Report(ProgressInfo.Running(75, "Limpieza", "Limpiando archivos de configuración..."));
                 await CleanupConfigFilesAsync(installation, whatIf, progress, cancellationToken);
-                progress?.Report(ProgressInfo.Running(80, "Limpieza", "Archivos de configuración limpiados."));
+                progress?.Report(ProgressInfo.Running(85, "Limpieza", "Archivos de configuración limpiados."));
             }
-            
+
             // Limpiar archivos de caché
             if (cleanupCacheFiles)
             {
@@ -126,11 +154,11 @@ public class CleanupService : ICleanupService
                 await CleanupCacheFilesAsync(installation, whatIf, progress, cancellationToken);
                 progress?.Report(ProgressInfo.Running(95, "Limpieza", "Archivos de caché limpiados."));
             }
-            
+
             // Finalizar limpieza
             progress?.Report(ProgressInfo.Completed("Limpieza", "Limpieza completada con éxito."));
             _logger.LogInfo("Limpieza de residuos completada con éxito.");
-            
+
             return result;
         }
         catch (OperationCanceledException)
@@ -146,9 +174,9 @@ public class CleanupService : ICleanupService
             return OperationResult.Failed($"Error durante la limpieza: {ex.Message}");
         }
     }
-    
+
     // Métodos privados para implementar cada tipo de limpieza
-    
+
     private async Task CleanupTempFilesAsync(
         PhotoshopInstallation installation,
         bool whatIf,
@@ -159,7 +187,7 @@ public class CleanupService : ICleanupService
         await Task.Delay(500, cancellationToken); // Simulación
         _logger.LogInfo("Limpieza de archivos temporales completada.");
     }
-    
+
     private async Task CleanupRegistryAsync(
         PhotoshopInstallation installation,
         bool whatIf,
@@ -170,7 +198,7 @@ public class CleanupService : ICleanupService
         await Task.Delay(500, cancellationToken); // Simulación
         _logger.LogInfo("Limpieza de entradas del registro completada.");
     }
-    
+
     private async Task CleanupConfigFilesAsync(
         PhotoshopInstallation installation,
         bool whatIf,
@@ -181,7 +209,7 @@ public class CleanupService : ICleanupService
         await Task.Delay(500, cancellationToken); // Simulación
         _logger.LogInfo("Limpieza de archivos de configuración completada.");
     }
-    
+
     private async Task CleanupCacheFilesAsync(
         PhotoshopInstallation installation,
         bool whatIf,

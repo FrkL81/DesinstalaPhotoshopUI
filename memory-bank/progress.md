@@ -59,9 +59,19 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
         *   ✅ Implementar los métodos `DetectFromInstalledPrograms` y `DetectFromFileSystem`.
         *   ✅ Completar el sistema de puntuación heurística (`EnrichInstallationInfoAsync`, `ClassifyInstallation`).
         *   ✅ **PUNTO DE PRUEBA CRÍTICO**: Se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones en lugar de solo reiniciar la UI.
-*   **Etapa 3: Limpieza y Desinstalación (TODO)**
-    *   Implementar `CleanupService`, `UninstallService`.
-    *   Implementar los servicios auxiliares restantes: `ProcessService`, `BackupService`.
+*   **Etapa 3: Limpieza y Desinstalación (EN PROGRESO)**
+    *   Implementar `CleanupService`. (PENDIENTE)
+    *   Implementar `UninstallService`. (PARCIALMENTE COMPLETADO)
+        *   ✅ Estructura básica e interfaz implementadas
+        *   ✅ Soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual)
+        *   ✅ Integración con el formulario de opciones de desinstalación
+        *   ⏳ Pendiente: Implementación completa de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
+    *   Implementar los servicios auxiliares restantes:
+        *   `ProcessService`. (PENDIENTE)
+        *   `BackupService`. (COMPLETADO)
+            *   ✅ Creación de copias de seguridad
+            *   ✅ Restauración de copias de seguridad
+            *   ✅ Gestión de metadatos
     *   ✅ Ya se han implementado: `FileSystemHelper`, `RegistryHelper`.
 *   **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core**
     *   ✅ Fase 4.1: Conectar la lógica real del Core a los manejadores de eventos de `MainForm`. Refinar `RunOperationAsync` y el manejo de `IProgress<ProgressInfo>`. (COMPLETADA)
@@ -78,7 +88,9 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
     * Proporcionar todas las dependencias necesarias al `DetectionService`
     * Mejorar el manejo de errores y el registro de operaciones
     * Configurar el modo de desarrollo para permitir pruebas sin permisos elevados
-*   La funcionalidad principal de la aplicación ahora depende de implementar los servicios de limpieza y desinstalación en `DesinstalaPhotoshop.Core`.
+*   Se ha implementado el servicio de desinstalación (`UninstallService`) con soporte para diferentes tipos de desinstaladores, pero es necesario completar la implementación de los métodos específicos.
+*   Se ha implementado el servicio de copias de seguridad (`BackupService`) para crear y restaurar copias de seguridad antes de operaciones destructivas.
+*   La funcionalidad principal de la aplicación ahora depende de completar la implementación de los servicios de limpieza y desinstalación en `DesinstalaPhotoshop.Core`.
 *   ✅ La lógica de `UpdateButtonsState` en `MainForm` ahora funciona correctamente con la información de `_detectedInstallations` proporcionada por el `DetectionService`.
 *   ✅ El reporte de progreso ahora utiliza el modelo `ProgressInfo` implementado, que proporciona una estructura clara para informar sobre el estado de las operaciones.
 *   ✅ Se ha implementado una versión completa de `ProgressInfo` en el proyecto Core y UI.
@@ -88,6 +100,10 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
 *   ✅ Se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
 
 ## 5. Historial de Decisiones Clave (implícito o reciente)
+*   **Implementación del servicio de desinstalación**: Se ha decidido implementar el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos.
+*   **Mejora del formulario de opciones de desinstalación**: Se ha decidido mejorar el formulario `UninstallOptionsForm` para incluir nuevas opciones como eliminar datos de usuario, eliminar componentes compartidos y modo de simulación (WhatIf).
+*   **Implementación del servicio de copias de seguridad**: Se ha decidido implementar el servicio de copias de seguridad para crear y restaurar copias de seguridad antes de operaciones destructivas.
+*   **Corrección de errores en la clase `OperationResult`**: Se ha decidido actualizar la clase para agregar la propiedad `Message` y el método `SuccessResult` para mejorar la comunicación de resultados de operaciones.
 *   Se decidió seguir un reinicio del proyecto con una arquitectura Core/UI separada.
 *   Se adoptó .NET 9 y Windows Forms.
 *   Se implementó un tema oscuro y se integraron librerías para mejorar la UX visual (FontAwesome, CustomMsgBox).

@@ -130,7 +130,7 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
     *   ✅ Conectar la lógica de clasificación con la actualización de la UI en `MainForm` (`lstInstallations`, iconos, tooltips).
 *   **Revisar**: `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md` (criterios y algoritmo), `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md` (impacto en la UI).
 
-### Etapa 3: Limpieza y Desinstalación 🛑 **NO INICIADA**
+### Etapa 3: Limpieza y Desinstalación ⚠️ **PARCIALMENTE INICIADA**
 
 **Objetivo**: Desarrollar la funcionalidad para desinstalar Photoshop y limpiar todos sus residuos de manera segura y eficaz.
 
@@ -140,7 +140,7 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
 *   `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (Secciones Desinstalación, Limpieza de Residuos, Gestión de Registro, Gestión de Archivos, Copias de Seguridad)
 *   `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md` (secciones correspondientes)
 
-#### Fase 3.1: Servicio de Limpieza (`CleanupService`)
+#### Fase 3.1: Servicio de Limpieza (`CleanupService`) 🛑 **NO INICIADA**
 *   **Tareas**:
     *   Implementar `CleanupService` en `DesinstalaPhotoshop.Core`.
     *   Implementar `CleanupAsync` y sus métodos auxiliares (`CleanupFilesAsync`, `CleanupRegistryAsync`, `StopAdobeServicesAsync`, `UninstallMsiProductsAsync`, `ProcessCommonFilesDirectoriesAsync`, `ScheduleFilesForDeletionAsync`) según `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
@@ -148,19 +148,22 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
     *   La limpieza de archivos debe considerar las estrategias detalladas en `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (Limpieza de Archivos y Carpetas).
 *   **Revisar**: `ManualDesarrollo/ResiduosDePhotoshop.md` (qué limpiar), `ManualDesarrollo/08_Formatos_Salida.md` (reportes de elementos no eliminados).
 
-#### Fase 3.2: Servicio de Desinstalación (`UninstallService`)
+#### Fase 3.2: Servicio de Desinstalación (`UninstallService`) ⚠️ **PARCIALMENTE COMPLETADA**
 *   **Tareas**:
-    *   Implementar `UninstallService` en `DesinstalaPhotoshop.Core`.
-    *   Implementar `UninstallAsync` y sus métodos auxiliares (`ExecuteUninstallerAsync`, `UninstallMsiProductAsync`, etc.) según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` y `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
+    *   ✅ Implementar `UninstallService` en `DesinstalaPhotoshop.Core`.
+    *   ✅ Implementar la estructura básica de `UninstallAsync` y sus métodos auxiliares.
+    *   ✅ Implementar soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual).
+    *   ✅ Integrar con el formulario `UninstallOptionsForm` para opciones de desinstalación.
+    *   ⏳ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI.
 *   **Revisar**: `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (estrategias de desinstalación).
 
-#### Fase 3.3: Servicios Auxiliares (Helpers y Servicios de Soporte)
+#### Fase 3.3: Servicios Auxiliares (Helpers y Servicios de Soporte) ⚠️ **PARCIALMENTE COMPLETADA**
 *   **Tareas**:
-    *   **`FileSystemHelper`**: Implementar métodos como `DeleteFileWithRetry`, `ScheduleFileForDeletion`, `ForceDeleteCommonFilesDirectory`, `BackupFile`, `BackupDirectory` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` y `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
-    *   **`RegistryHelper`**: Implementar `DeleteRegistryKey`, `ExecuteRegDelete`, `BackupRegistryKey`, `RestoreRegistryKey` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` y `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
-    *   **`ProcessService`**: Implementar `StopAdobeProcessesAsync` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`.
-    *   **`BackupService`**: Implementar `CreateBackupAsync`, `CreateBackupForCleanupAsync`, `RestoreBackupAsync`, `GetAvailableBackups` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` y `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`. Asegurar la estructura de copias de seguridad y metadatos (`backup_info.json`) como se describe en `ManualDesarrollo/08_Formatos_Salida.md`.
-    *   **`LoggingService`**: Implementar el servicio de logging para consola y archivo, según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` y `ManualDesarrollo/08_Formatos_Salida.md`.
+    *   ✅ **`FileSystemHelper`**: Implementados métodos básicos para operaciones con archivos y directorios.
+    *   ✅ **`RegistryHelper`**: Implementados métodos básicos para operaciones con el registro.
+    *   ⏳ **`ProcessService`**: Pendiente implementar `StopAdobeProcessesAsync` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`.
+    *   ✅ **`BackupService`**: Implementados `CreateBackupAsync`, `CreateBackupForCleanupAsync`, `RestoreBackupAsync`, `GetAvailableBackups` y `DeleteBackupAsync`. Asegurada la estructura de copias de seguridad y metadatos (`backup_info.json`).
+    *   ✅ **`LoggingService`**: Implementado el servicio de logging para consola y archivo.
 *   **Revisar**: `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md` (para implementaciones de referencia), `ManualDesarrollo/09_Buenas_Practicas_Lecciones.md` (manejo de errores, optimizaciones).
 
 ### Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core ⚠️ **PARCIALMENTE INICIADA**
@@ -278,22 +281,29 @@ Consultar `ManualDesarrollo/10_Anexos.md` para detalles de versiones y configura
 ## 7. Estado Actual y Próximos Pasos
 
 ### Estado Actual (Mayo 2025)
-El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. Se han implementado todos los servicios auxiliares necesarios y se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones.
+El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. Se ha avanzado significativamente en la **Etapa 3 (Limpieza y Desinstalación)** con la implementación parcial del servicio de desinstalación (`UninstallService`) y la implementación completa del servicio de copias de seguridad (`BackupService`).
+
+Se han implementado todos los servicios auxiliares necesarios para la detección y se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones.
 
 Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc.
 
+Se ha implementado el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos. También se ha implementado el servicio de copias de seguridad para crear y restaurar copias de seguridad antes de operaciones destructivas.
+
 ### Próximos Pasos Prioritarios
-1. **Implementar el servicio de desinstalación**:
-   - Desarrollar `UninstallService` con soporte para diferentes métodos de desinstalación
-   - Implementar la lógica para ejecutar desinstaladores y eliminar productos MSI
+1. **Completar la implementación del servicio de desinstalación**:
+   - ✅ Desarrollar `UninstallService` con soporte para diferentes métodos de desinstalación
+   - ⏳ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
 
 2. **Implementar el servicio de limpieza**:
-   - Desarrollar `CleanupService` para eliminar residuos de instalaciones
-   - Implementar métodos para limpiar archivos, carpetas y claves de registro
+   - ⏳ Desarrollar `CleanupService` para eliminar residuos de instalaciones
+   - ⏳ Implementar métodos para limpiar archivos, carpetas y claves de registro
 
 3. **Implementar el sistema de copias de seguridad**:
-   - Desarrollar `BackupService` para crear y restaurar copias de seguridad
-   - Asegurar que todas las operaciones de limpieza y desinstalación creen copias de seguridad
+   - ✅ Desarrollar `BackupService` para crear y restaurar copias de seguridad
+   - ✅ Asegurar que todas las operaciones de limpieza y desinstalación creen copias de seguridad
+
+4. **Implementar el servicio de procesos**:
+   - ⏳ Desarrollar `ProcessService` para detener procesos de Adobe antes de la desinstalación/limpieza
 
 ## 8. Conclusión
 

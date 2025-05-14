@@ -19,6 +19,7 @@ public class UninstallService : IUninstallService
     private readonly IFileSystemHelper _fileSystemHelper;
     private readonly IRegistryHelper _registryHelper;
     private readonly IBackupService _backupService;
+    private readonly IProcessService _processService;
 
     /// <summary>
     /// Inicializa una nueva instancia de la clase UninstallService.
@@ -27,16 +28,19 @@ public class UninstallService : IUninstallService
     /// <param name="fileSystemHelper">Servicio auxiliar para operaciones con el sistema de archivos.</param>
     /// <param name="registryHelper">Servicio auxiliar para operaciones con el registro.</param>
     /// <param name="backupService">Servicio de copias de seguridad.</param>
+    /// <param name="processService">Servicio para gestionar procesos.</param>
     public UninstallService(
         ILoggingService logger,
         IFileSystemHelper fileSystemHelper,
         IRegistryHelper registryHelper,
-        IBackupService backupService)
+        IBackupService backupService,
+        IProcessService processService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileSystemHelper = fileSystemHelper ?? throw new ArgumentNullException(nameof(fileSystemHelper));
         _registryHelper = registryHelper ?? throw new ArgumentNullException(nameof(registryHelper));
         _backupService = backupService ?? throw new ArgumentNullException(nameof(backupService));
+        _processService = processService ?? throw new ArgumentNullException(nameof(processService));
     }
 
     /// <summary>
@@ -94,6 +98,30 @@ public class UninstallService : IUninstallService
                 progress?.Report(ProgressInfo.Running(20, "Desinstalación", "Modo de simulación activado. No se realizarán cambios reales."));
             }
 
+            // Detener procesos de Adobe para evitar bloqueos de archivos
+            progress?.Report(ProgressInfo.Running(25, "Desinstalación", "Deteniendo procesos de Adobe..."));
+            _logger.LogInfo("Deteniendo procesos de Adobe antes de la desinstalación...");
+
+            var processResult = await _processService.StopAdobeProcessesAsync(
+                whatIf,
+                progress,
+                cancellationToken);
+
+            if (!processResult.Success)
+            {
+                _logger.LogWarning($"Advertencia al detener procesos: {processResult.Message}");
+                progress?.Report(ProgressInfo.Warning("Desinstalación", $"Algunos procesos no pudieron detenerse: {processResult.Message}"));
+            }
+            else
+            {
+                _logger.LogInfo($"Procesos de Adobe detenidos: {processResult.Message}");
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return OperationResult.Canceled("Desinstalación cancelada por el usuario.");
+            }
+
             // Obtener información del desinstalador
             var uninstallerInfo = GetUninstallerInfo(installation);
             if (uninstallerInfo == null)
@@ -106,7 +134,7 @@ public class UninstallService : IUninstallService
             }
 
             // Ejecutar el desinstalador según su tipo
-            progress?.Report(ProgressInfo.Running(30, "Desinstalación", "Ejecutando desinstalador..."));
+            progress?.Report(ProgressInfo.Running(40, "Desinstalación", "Ejecutando desinstalador..."));
 
             switch (uninstallerInfo.Type)
             {
@@ -135,14 +163,14 @@ public class UninstallService : IUninstallService
             // Limpiar datos de usuario si es necesario
             if (result.Success && removeUserData)
             {
-                progress?.Report(ProgressInfo.Running(80, "Desinstalación", "Eliminando datos de usuario..."));
+                progress?.Report(ProgressInfo.Running(85, "Desinstalación", "Eliminando datos de usuario..."));
                 await RemoveUserDataAsync(installation, whatIf, progress, cancellationToken);
             }
 
             // Limpiar componentes compartidos si es necesario
             if (result.Success && removeSharedComponents)
             {
-                progress?.Report(ProgressInfo.Running(90, "Desinstalación", "Eliminando componentes compartidos..."));
+                progress?.Report(ProgressInfo.Running(95, "Desinstalación", "Eliminando componentes compartidos..."));
                 await RemoveSharedComponentsAsync(installation, whatIf, progress, cancellationToken);
             }
 

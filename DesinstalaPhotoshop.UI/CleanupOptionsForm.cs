@@ -12,6 +12,11 @@ namespace DesinstalaPhotoshop.UI
         private bool _createBackup = true;
 
         /// <summary>
+        /// Indica si se debe ejecutar en modo simulación (sin realizar cambios reales)
+        /// </summary>
+        private bool _whatIfMode = false;
+
+        /// <summary>
         /// Indica si se deben limpiar archivos temporales
         /// </summary>
         private bool _cleanupTempFiles = true;
@@ -35,6 +40,11 @@ namespace DesinstalaPhotoshop.UI
         /// Obtiene si se debe crear una copia de seguridad antes de limpiar
         /// </summary>
         public bool CreateBackup => _createBackup;
+
+        /// <summary>
+        /// Obtiene si se debe ejecutar en modo simulación (sin realizar cambios reales)
+        /// </summary>
+        public bool WhatIfMode => _whatIfMode;
 
         /// <summary>
         /// Obtiene si se deben limpiar archivos temporales
@@ -88,6 +98,11 @@ namespace DesinstalaPhotoshop.UI
         private void ChkCreateBackup_CheckedChanged(object sender, EventArgs e)
         {
             _createBackup = chkCreateBackup.Checked;
+        }
+
+        private void ChkWhatIfMode_CheckedChanged(object sender, EventArgs e)
+        {
+            _whatIfMode = chkWhatIfMode.Checked;
         }
 
         private void ChkCleanupTempFiles_CheckedChanged(object sender, EventArgs e)

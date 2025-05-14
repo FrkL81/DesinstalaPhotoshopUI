@@ -267,12 +267,12 @@ namespace DesinstalaPhotoshop.UI
             // colLocation
             // 
             colLocation.Text = "Ubicación";
-            colLocation.Width = 500;
+            colLocation.Width = 505;
             // 
             // colConfidence
             // 
             colConfidence.Text = "Confianza";
-            colConfidence.Width = 80;
+            colConfidence.Width = 100;
             // 
             // panelConsole
             // 
