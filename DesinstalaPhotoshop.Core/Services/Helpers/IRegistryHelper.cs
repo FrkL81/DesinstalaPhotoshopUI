@@ -43,4 +43,25 @@ public interface IRegistryHelper
     /// <param name="filePath">Ruta del archivo .reg a importar.</param>
     /// <returns>True si la importación fue exitosa, false en caso contrario.</returns>
     bool ImportRegistryFile(string filePath);
+
+    /// <summary>
+    /// Busca claves de registro relacionadas con Adobe Photoshop en una clave raíz.
+    /// </summary>
+    /// <param name="rootKey">Clave raíz donde buscar.</param>
+    /// <returns>Lista de claves de registro encontradas.</returns>
+    List<string> FindPhotoshopRegistryKeys(string rootKey);
+
+    /// <summary>
+    /// Elimina una clave del registro.
+    /// </summary>
+    /// <param name="keyPath">Ruta de la clave a eliminar.</param>
+    /// <returns>True si la eliminación fue exitosa, false en caso contrario.</returns>
+    bool DeleteRegistryKey(string keyPath);
+
+    /// <summary>
+    /// Elimina una clave del registro utilizando reg.exe.
+    /// </summary>
+    /// <param name="keyPath">Ruta de la clave a eliminar.</param>
+    /// <returns>True si la eliminación fue exitosa, false en caso contrario.</returns>
+    bool DeleteRegistryKeyWithRegExe(string keyPath);
 }

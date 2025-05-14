@@ -130,7 +130,7 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
     *   ✅ Conectar la lógica de clasificación con la actualización de la UI en `MainForm` (`lstInstallations`, iconos, tooltips).
 *   **Revisar**: `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md` (criterios y algoritmo), `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md` (impacto en la UI).
 
-### Etapa 3: Limpieza y Desinstalación ⚠️ **PARCIALMENTE INICIADA**
+### Etapa 3: Limpieza y Desinstalación ⚠️ **PARCIALMENTE COMPLETADA**
 
 **Objetivo**: Desarrollar la funcionalidad para desinstalar Photoshop y limpiar todos sus residuos de manera segura y eficaz.
 
@@ -140,12 +140,29 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
 *   `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (Secciones Desinstalación, Limpieza de Residuos, Gestión de Registro, Gestión de Archivos, Copias de Seguridad)
 *   `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md` (secciones correspondientes)
 
-#### Fase 3.1: Servicio de Limpieza (`CleanupService`) 🛑 **NO INICIADA**
+#### Fase 3.1: Servicio de Limpieza (`CleanupService`) ✅ **COMPLETADA**
 *   **Tareas**:
-    *   Implementar `CleanupService` en `DesinstalaPhotoshop.Core`.
-    *   Implementar `CleanupAsync` y sus métodos auxiliares (`CleanupFilesAsync`, `CleanupRegistryAsync`, `StopAdobeServicesAsync`, `UninstallMsiProductsAsync`, `ProcessCommonFilesDirectoriesAsync`, `ScheduleFilesForDeletionAsync`) según `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
-    *   Asegurar que la limpieza del registro utilice `RegistryHelper` y considere el uso de `reg.exe` como fallback (`ManualDesarrollo/02_Objetivos_Proyecto.md`).
-    *   La limpieza de archivos debe considerar las estrategias detalladas en `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md` (Limpieza de Archivos y Carpetas).
+    *   ✅ Implementar `CleanupService` en `DesinstalaPhotoshop.Core`.
+    *   ✅ Implementar métodos de limpieza:
+        *   ✅ `CleanupTempFilesAsync`: Para limpiar archivos temporales de Photoshop
+        *   ✅ `CleanupRegistryAsync`: Para limpiar entradas del registro relacionadas con Photoshop
+        *   ✅ `CleanupConfigFilesAsync`: Para limpiar archivos de configuración
+        *   ✅ `CleanupCacheFilesAsync`: Para limpiar archivos de caché
+    *   ✅ Implementar métodos auxiliares:
+        *   ✅ `ProcessCommonFilesDirectoriesAsync`: Para procesar carpetas en Common Files
+        *   ✅ `ForceDeleteCommonFilesDirectoryAsync`: Para intentar eliminar carpetas difíciles
+        *   ✅ `ScheduleFilesForDeletionAsync`: Para programar eliminación de archivos persistentes
+        *   ✅ `ScheduleFileForDeletionAsync`: Para programar eliminación de un archivo
+        *   ✅ `ScheduleDirectoryForDeletionAsync`: Para programar eliminación de un directorio
+    *   ✅ Implementar la clase auxiliar `NativeMethods` para acceder a métodos nativos de Windows (MoveFileEx)
+    *   ✅ Asegurar que la limpieza del registro utilice `RegistryHelper` y considere el uso de `reg.exe` como fallback.
+    *   ✅ Implementar métodos adicionales en `RegistryHelper`:
+        *   ✅ `FindPhotoshopRegistryKeys`: Para buscar claves de registro relacionadas con Photoshop
+        *   ✅ `DeleteRegistryKey`: Para eliminar una clave del registro
+        *   ✅ `DeleteRegistryKeyWithRegExe`: Para eliminar una clave del registro usando reg.exe
+    *   ✅ Implementar métodos adicionales en `FileSystemHelper`:
+        *   ✅ `DeleteFile`: Para eliminar un archivo
+        *   ✅ `DeleteDirectory`: Para eliminar un directorio y, opcionalmente, su contenido
 *   **Revisar**: `ManualDesarrollo/ResiduosDePhotoshop.md` (qué limpiar), `ManualDesarrollo/08_Formatos_Salida.md` (reportes de elementos no eliminados).
 
 #### Fase 3.2: Servicio de Desinstalación (`UninstallService`) ⚠️ **PARCIALMENTE COMPLETADA**
@@ -161,7 +178,7 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
 *   **Tareas**:
     *   ✅ **`FileSystemHelper`**: Implementados métodos básicos para operaciones con archivos y directorios.
     *   ✅ **`RegistryHelper`**: Implementados métodos básicos para operaciones con el registro.
-    *   ⏳ **`ProcessService`**: Pendiente implementar `StopAdobeProcessesAsync` según `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`.
+    *   ✅ **`ProcessService`**: Implementado `ProcessService` con métodos para detener procesos y servicios de Adobe antes de la desinstalación/limpieza.
     *   ✅ **`BackupService`**: Implementados `CreateBackupAsync`, `CreateBackupForCleanupAsync`, `RestoreBackupAsync`, `GetAvailableBackups` y `DeleteBackupAsync`. Asegurada la estructura de copias de seguridad y metadatos (`backup_info.json`).
     *   ✅ **`LoggingService`**: Implementado el servicio de logging para consola y archivo.
 *   **Revisar**: `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md` (para implementaciones de referencia), `ManualDesarrollo/09_Buenas_Practicas_Lecciones.md` (manejo de errores, optimizaciones).
@@ -281,13 +298,17 @@ Consultar `ManualDesarrollo/10_Anexos.md` para detalles de versiones y configura
 ## 7. Estado Actual y Próximos Pasos
 
 ### Estado Actual (Mayo 2025)
-El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. Se ha avanzado significativamente en la **Etapa 3 (Limpieza y Desinstalación)** con la implementación parcial del servicio de desinstalación (`UninstallService`) y la implementación completa del servicio de copias de seguridad (`BackupService`).
+El proyecto ha completado la **Etapa 1 (Interfaz de Usuario)** y la **Etapa 2 (Detección de Instalaciones)**. Se ha avanzado significativamente en la **Etapa 3 (Limpieza y Desinstalación)** con la implementación completa del servicio de limpieza (`CleanupService`), la implementación parcial del servicio de desinstalación (`UninstallService`), la implementación completa del servicio de copias de seguridad (`BackupService`) y la implementación completa del servicio de procesos (`ProcessService`).
 
 Se han implementado todos los servicios auxiliares necesarios para la detección y se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones.
 
 Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc.
 
+Se ha implementado el servicio de limpieza con métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché. También se han implementado métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes al reiniciar el sistema. Se ha implementado la clase auxiliar `NativeMethods` para acceder a métodos nativos de Windows (MoveFileEx).
+
 Se ha implementado el servicio de desinstalación con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual) y opciones adicionales como eliminar datos de usuario y componentes compartidos. También se ha implementado el servicio de copias de seguridad para crear y restaurar copias de seguridad antes de operaciones destructivas.
+
+Se ha implementado el servicio de procesos para detener procesos y servicios de Adobe antes de realizar operaciones de limpieza o desinstalación, lo que es crucial para evitar problemas de bloqueo de archivos durante estas operaciones. Este servicio se ha integrado con los servicios de limpieza y desinstalación.
 
 ### Próximos Pasos Prioritarios
 1. **Completar la implementación del servicio de desinstalación**:
@@ -295,15 +316,22 @@ Se ha implementado el servicio de desinstalación con soporte para diferentes ti
    - ⏳ Completar la implementación de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
 
 2. **Implementar el servicio de limpieza**:
-   - ⏳ Desarrollar `CleanupService` para eliminar residuos de instalaciones
-   - ⏳ Implementar métodos para limpiar archivos, carpetas y claves de registro
+   - ✅ Desarrollar `CleanupService` para eliminar residuos de instalaciones
+   - ✅ Implementar métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché
+   - ✅ Implementar métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes
 
 3. **Implementar el sistema de copias de seguridad**:
    - ✅ Desarrollar `BackupService` para crear y restaurar copias de seguridad
    - ✅ Asegurar que todas las operaciones de limpieza y desinstalación creen copias de seguridad
 
 4. **Implementar el servicio de procesos**:
-   - ⏳ Desarrollar `ProcessService` para detener procesos de Adobe antes de la desinstalación/limpieza
+   - ✅ Desarrollar `ProcessService` para detener procesos de Adobe antes de la desinstalación/limpieza
+
+5. **Implementar el generador de scripts**:
+   - ⏳ Desarrollar `ScriptGenerator` para generar scripts de limpieza y desinstalación
+
+6. **Implementar la integración con el sistema**:
+   - ⏳ Desarrollar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados
 
 ## 8. Conclusión
 

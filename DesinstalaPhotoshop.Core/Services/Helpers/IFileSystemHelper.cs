@@ -63,4 +63,19 @@ public interface IFileSystemHelper
     /// <param name="cancellationToken">Token para cancelar la operación.</param>
     /// <returns>Task que representa la operación asíncrona.</returns>
     Task CopyFileAsync(string sourcePath, string destinationPath, bool overwrite = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Elimina un archivo.
+    /// </summary>
+    /// <param name="path">Ruta del archivo a eliminar.</param>
+    /// <returns>True si el archivo se eliminó correctamente, false en caso contrario.</returns>
+    bool DeleteFile(string path);
+
+    /// <summary>
+    /// Elimina un directorio y, opcionalmente, su contenido.
+    /// </summary>
+    /// <param name="path">Ruta del directorio a eliminar.</param>
+    /// <param name="recursive">Indica si se debe eliminar también el contenido del directorio.</param>
+    /// <returns>True si el directorio se eliminó correctamente, false en caso contrario.</returns>
+    bool DeleteDirectory(string path, bool recursive = false);
 }

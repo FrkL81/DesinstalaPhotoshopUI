@@ -242,4 +242,57 @@ public class FileSystemHelper : IFileSystemHelper
             throw; // Re-lanzar para que el llamador pueda manejar el error
         }
     }
+
+    /// <summary>
+    /// Elimina un archivo.
+    /// </summary>
+    /// <param name="path">Ruta del archivo a eliminar.</param>
+    /// <returns>True si el archivo se eliminó correctamente, false en caso contrario.</returns>
+    public bool DeleteFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        if (!FileExists(path))
+            return true; // Si el archivo no existe, consideramos que la eliminación fue exitosa
+
+        try
+        {
+            File.Delete(path);
+            _logger.LogInfo($"Archivo eliminado: {path}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al eliminar el archivo {path}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Elimina un directorio y, opcionalmente, su contenido.
+    /// </summary>
+    /// <param name="path">Ruta del directorio a eliminar.</param>
+    /// <param name="recursive">Indica si se debe eliminar también el contenido del directorio.</param>
+    /// <returns>True si el directorio se eliminó correctamente, false en caso contrario.</returns>
+    public bool DeleteDirectory(string path, bool recursive = false)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        if (!DirectoryExists(path))
+            return true; // Si el directorio no existe, consideramos que la eliminación fue exitosa
+
+        try
+        {
+            Directory.Delete(path, recursive);
+            _logger.LogInfo($"Directorio eliminado: {path}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al eliminar el directorio {path}: {ex.Message}");
+            return false;
+        }
+    }
 }
