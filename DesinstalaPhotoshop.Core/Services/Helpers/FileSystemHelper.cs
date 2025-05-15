@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// Proporciona métodos auxiliares para operaciones con el sistema de archivos.
+/// Esta es la implementación principal que debe usarse en todo el proyecto.
 /// </summary>
 public class FileSystemHelper : IFileSystemHelper
 {

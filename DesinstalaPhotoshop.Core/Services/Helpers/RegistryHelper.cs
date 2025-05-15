@@ -10,6 +10,7 @@ using DesinstalaPhotoshop.Core.Models;
 
 /// <summary>
 /// Proporciona métodos auxiliares para operaciones con el registro de Windows.
+/// Esta es la implementación principal que debe usarse en todo el proyecto.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public class RegistryHelper : IRegistryHelper

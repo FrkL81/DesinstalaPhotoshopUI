@@ -25,28 +25,62 @@ namespace DesinstalaPhotoshop.UI.Models
         public string StatusMessage { get; }
 
         /// <summary>
-        /// Obtiene el estado de la operación.
+        /// Obtiene un valor que indica si la operación está en ejecución.
         /// </summary>
-        public string OperationStatus { get; }
+        public bool IsRunning { get; }
 
         /// <summary>
-        /// Inicializa una nueva instancia de la clase ProgressInfo.
+        /// Obtiene un valor que indica si la operación ha finalizado con éxito.
         /// </summary>
-        /// <param name="progressPercentage">Porcentaje de progreso (0-100).</param>
-        /// <param name="operationTitle">Título de la operación.</param>
-        /// <param name="statusMessage">Mensaje detallado sobre el progreso.</param>
-        /// <param name="operationStatus">Estado de la operación.</param>
-        public ProgressInfo(
-            int progressPercentage,
-            string operationTitle,
-            string statusMessage,
-            string operationStatus)
-        {
-            ProgressPercentage = Math.Clamp(progressPercentage, 0, 100);
-            OperationTitle = operationTitle;
-            StatusMessage = statusMessage;
-            OperationStatus = operationStatus;
-        }
+        public bool IsCompleted { get; }
+
+        /// <summary>
+        /// Obtiene un valor que indica si la operación ha fallado.
+        /// </summary>
+        public bool HasError { get; }
+
+        /// <summary>
+        /// Obtiene un valor que indica si la operación ha sido cancelada.
+        /// </summary>
+        public bool IsCanceled { get; }
+
+        /// <summary>
+        /// Obtiene un valor que indica si la operación tiene una advertencia.
+        /// </summary>
+        public bool HasWarning { get; }
+
+        /// <summary>
+        /// Obtiene el mensaje de error si la operación ha fallado.
+        /// </summary>
+        public string? ErrorMessage { get; }
+
+        /// <summary>
+    /// Inicializa una nueva instancia de la clase ProgressInfo.
+    /// </summary>
+    /// <param name="progressPercentage">Porcentaje de progreso (0-100).</param>
+    /// <param name="operationTitle">Título de la operación.</param>
+    /// <param name="statusMessage">Mensaje detallado sobre el progreso.</param>
+    public ProgressInfo(
+        int progressPercentage,
+        string operationTitle,
+        string statusMessage,
+        bool isRunning,
+        bool isCompleted,
+        bool hasError,
+        bool isCanceled,
+        bool hasWarning,
+        string? errorMessage)
+    {
+        ProgressPercentage = Math.Clamp(progressPercentage, 0, 100);
+        OperationTitle = operationTitle;
+        StatusMessage = statusMessage;
+        IsRunning = isRunning;
+        IsCompleted = isCompleted;
+        HasError = hasError;
+        IsCanceled = isCanceled;
+        HasWarning = hasWarning;
+        ErrorMessage = errorMessage;
+    }
 
         /// <summary>
         /// Crea una instancia de ProgressInfo para una operación en ejecución.
@@ -57,7 +91,7 @@ namespace DesinstalaPhotoshop.UI.Models
         /// <returns>Una nueva instancia de ProgressInfo.</returns>
         public static ProgressInfo Running(int progressPercentage, string operationTitle, string statusMessage)
         {
-            return new ProgressInfo(progressPercentage, operationTitle, statusMessage, "Running");
+            return new ProgressInfo(progressPercentage, operationTitle, statusMessage, true, false, false, false, false, null);
         }
 
         /// <summary>
@@ -68,7 +102,7 @@ namespace DesinstalaPhotoshop.UI.Models
         /// <returns>Una nueva instancia de ProgressInfo.</returns>
         public static ProgressInfo Completed(string operationTitle, string statusMessage)
         {
-            return new ProgressInfo(100, operationTitle, statusMessage, "Completed");
+            return new ProgressInfo(100, operationTitle, statusMessage, false, true, false, false, false, null);
         }
 
         /// <summary>
@@ -79,7 +113,7 @@ namespace DesinstalaPhotoshop.UI.Models
         /// <returns>Una nueva instancia de ProgressInfo.</returns>
         public static ProgressInfo Failed(string operationTitle, string errorMessage)
         {
-            return new ProgressInfo(100, operationTitle, "Error: " + errorMessage, "Failed");
+            return new ProgressInfo(100, operationTitle, "Error: " + errorMessage, false, false, true, false, false, errorMessage);
         }
 
         /// <summary>
@@ -90,7 +124,7 @@ namespace DesinstalaPhotoshop.UI.Models
         /// <returns>Una nueva instancia de ProgressInfo.</returns>
         public static ProgressInfo Canceled(string operationTitle, string message)
         {
-            return new ProgressInfo(100, operationTitle, "Cancelado: " + message, "Canceled");
+            return new ProgressInfo(100, operationTitle, "Cancelado: " + message, false, false, false, true, false, null);
         }
 
         /// <summary>
@@ -101,7 +135,7 @@ namespace DesinstalaPhotoshop.UI.Models
         /// <returns>Una nueva instancia de ProgressInfo.</returns>
         public static ProgressInfo Warning(string operationTitle, string message)
         {
-            return new ProgressInfo(100, operationTitle, "Advertencia: " + message, "Warning");
+            return new ProgressInfo(100, operationTitle, "Advertencia: " + message, false, false, false, false, true, null);
         }
     }
 }

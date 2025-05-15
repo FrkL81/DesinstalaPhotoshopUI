@@ -1,3 +1,6 @@
+using System;
+using System.Windows.Forms;
+
 namespace DesinstalaPhotoshop.UI
 {
     internal static class Program
@@ -6,7 +9,7 @@ namespace DesinstalaPhotoshop.UI
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             // Configuración de la aplicación
             ApplicationConfiguration.Initialize();
@@ -14,8 +17,11 @@ namespace DesinstalaPhotoshop.UI
             // Aplicar tema oscuro
             Application.SetColorMode(SystemColorMode.Dark);
 
-            // Iniciar la aplicación
-            Application.Run(new MainForm());
+            // Verificar si la aplicación se inició con el argumento --elevated
+            bool isElevated = Array.Exists(args, arg => arg == "--elevated");
+
+            // Iniciar la aplicación pasando el estado de elevación
+            Application.Run(new MainForm(isElevated));
         }
     }
 }

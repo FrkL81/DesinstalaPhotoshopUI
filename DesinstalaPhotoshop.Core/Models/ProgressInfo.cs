@@ -51,6 +51,44 @@ public class ProgressInfo
     public string? ErrorMessage { get; }
 
     /// <summary>
+    /// Crea una nueva instancia de ProgressInfo para una operación en curso.
+    /// </summary>
+
+
+    /// <summary>
+    /// Crea una nueva instancia de ProgressInfo para una operación completada.
+    /// </summary>
+    public static ProgressInfo Completed(int progress, string title, string message)
+    {
+        return new ProgressInfo(progress, title, message, false, true, false, false, false, null);
+    }
+
+    /// <summary>
+    /// Crea una nueva instancia de ProgressInfo para una operación con error.
+    /// </summary>
+    public static ProgressInfo Error(int progress, string title, string message, string errorMessage)
+    {
+        return new ProgressInfo(progress, title, message, false, false, true, false, false, errorMessage);
+    }
+
+    /// <summary>
+    /// Crea una nueva instancia de ProgressInfo para una operación cancelada.
+    /// </summary>
+    public static ProgressInfo Canceled(int progress, string title, string message)
+    {
+        return new ProgressInfo(progress, title, message, false, false, false, true, false, null);
+    }
+
+    /// <summary>
+    /// Crea una nueva instancia de ProgressInfo para una operación con advertencia.
+    /// </summary>
+    public static ProgressInfo Warning(int progress, string title, string message)
+    {
+        return new ProgressInfo(progress, title, message, false, false, false, false, true, null);
+    }
+
+
+    /// <summary>
     /// Obtiene el estado de la operación.
     /// NOTA: Esta es una propiedad temporal para resolver errores de compilación.
     /// TODO: Esta propiedad debe ser reemplazada o actualizada según el plan de desarrollo.

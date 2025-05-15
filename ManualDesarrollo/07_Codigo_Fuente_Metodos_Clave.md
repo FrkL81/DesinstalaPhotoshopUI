@@ -178,7 +178,10 @@ public async Task<List<PhotoshopInstallation>> DetectInstallationsAsync(
 
 ### DetectionService.ClassifyInstallation
 
-Este método clasifica una instalación de Photoshop según su puntuación de confianza y otros criterios.
+Este método clasifica una instalación de Photoshop según su puntuación de confianza y otros criterios. Los umbrales actuales son:
+- Instalación Principal: ConfidenceScore >= 50
+- Posible Instalación Principal: ConfidenceScore entre 30 y 49
+- Residuos: ConfidenceScore < 30
 
 ```csharp
 /// <summary>
@@ -233,7 +236,7 @@ Este método enriquece la información de una instalación detectada, calculando
 /// Enriquece la información de una instalación detectada.
 /// </summary>
 /// <param name="installation">Instalación a enriquecer.</param>
-private void EnrichInstallationInfo(PhotoshopInstallation installation)
+private async Task EnrichInstallationInfoAsync(PhotoshopInstallation installation)
 {
     int confidenceScore = 0;
 
@@ -356,11 +359,15 @@ Este método es el punto de entrada principal para la limpieza de residuos de Ph
 /// <param name="installations">Lista opcional de instalaciones detectadas para limpiar sus claves de registro asociadas.</param>
 /// <returns>Resultado de la operación.</returns>
 public async Task<OperationResult> CleanupAsync(
+    PhotoshopInstallation installation,
     bool createBackup = true,
     bool whatIf = false,
+    bool cleanupTempFiles = true,
+    bool cleanupRegistry = true,
+    bool cleanupConfigFiles = true,
+    bool cleanupCacheFiles = true,
     IProgress<ProgressInfo>? progress = null,
-    CancellationToken cancellationToken = default,
-    List<PhotoshopInstallation>? installations = null)
+    CancellationToken cancellationToken = default)
 {
     _logger.LogInfo($"Iniciando limpieza de residuos de Photoshop (WhatIf: {whatIf})...");
     progress?.Report(ProgressInfo.Running(0, "Limpieza de residuos", "Iniciando..."));
