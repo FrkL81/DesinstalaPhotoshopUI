@@ -40,9 +40,9 @@ namespace DesinstalaPhotoshop.UI
             btnOK = new Button();
             btnCancel = new Button();
             SuspendLayout();
-            //
+            // 
             // lblTitle
-            //
+            // 
             lblTitle.AutoSize = true;
             lblTitle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTitle.ForeColor = Color.White;
@@ -51,9 +51,9 @@ namespace DesinstalaPhotoshop.UI
             lblTitle.Size = new Size(178, 21);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Opciones de limpieza:";
-            //
+            // 
             // chkCreateBackup
-            //
+            // 
             chkCreateBackup.AutoSize = true;
             chkCreateBackup.Checked = true;
             chkCreateBackup.CheckState = CheckState.Checked;
@@ -65,21 +65,21 @@ namespace DesinstalaPhotoshop.UI
             chkCreateBackup.Text = "Crear copia de seguridad antes de limpiar (recomendado)";
             chkCreateBackup.UseVisualStyleBackColor = true;
             chkCreateBackup.CheckedChanged += ChkCreateBackup_CheckedChanged;
-            //
+            // 
             // chkWhatIfMode
-            //
+            // 
             chkWhatIfMode.AutoSize = true;
             chkWhatIfMode.ForeColor = Color.White;
             chkWhatIfMode.Location = new Point(31, 270);
             chkWhatIfMode.Name = "chkWhatIfMode";
-            chkWhatIfMode.Size = new Size(150, 19);
+            chkWhatIfMode.Size = new Size(265, 19);
             chkWhatIfMode.TabIndex = 10;
             chkWhatIfMode.Text = "Modo simulación (no realizar cambios reales)";
             chkWhatIfMode.UseVisualStyleBackColor = true;
             chkWhatIfMode.CheckedChanged += ChkWhatIfMode_CheckedChanged;
-            //
+            // 
             // chkCleanupTempFiles
-            //
+            // 
             chkCleanupTempFiles.AutoSize = true;
             chkCleanupTempFiles.Checked = true;
             chkCleanupTempFiles.CheckState = CheckState.Checked;
@@ -91,9 +91,9 @@ namespace DesinstalaPhotoshop.UI
             chkCleanupTempFiles.Text = "Limpiar archivos temporales";
             chkCleanupTempFiles.UseVisualStyleBackColor = true;
             chkCleanupTempFiles.CheckedChanged += ChkCleanupTempFiles_CheckedChanged;
-            //
+            // 
             // chkCleanupRegistry
-            //
+            // 
             chkCleanupRegistry.AutoSize = true;
             chkCleanupRegistry.Checked = true;
             chkCleanupRegistry.CheckState = CheckState.Checked;
@@ -105,9 +105,9 @@ namespace DesinstalaPhotoshop.UI
             chkCleanupRegistry.Text = "Limpiar entradas del registro";
             chkCleanupRegistry.UseVisualStyleBackColor = true;
             chkCleanupRegistry.CheckedChanged += ChkCleanupRegistry_CheckedChanged;
-            //
+            // 
             // chkCleanupConfigFiles
-            //
+            // 
             chkCleanupConfigFiles.AutoSize = true;
             chkCleanupConfigFiles.Checked = true;
             chkCleanupConfigFiles.CheckState = CheckState.Checked;
@@ -119,9 +119,9 @@ namespace DesinstalaPhotoshop.UI
             chkCleanupConfigFiles.Text = "Limpiar archivos de configuración";
             chkCleanupConfigFiles.UseVisualStyleBackColor = true;
             chkCleanupConfigFiles.CheckedChanged += ChkCleanupConfigFiles_CheckedChanged;
-            //
+            // 
             // chkCleanupCacheFiles
-            //
+            // 
             chkCleanupCacheFiles.AutoSize = true;
             chkCleanupCacheFiles.Checked = true;
             chkCleanupCacheFiles.CheckState = CheckState.Checked;
@@ -133,9 +133,9 @@ namespace DesinstalaPhotoshop.UI
             chkCleanupCacheFiles.Text = "Limpiar archivos de caché";
             chkCleanupCacheFiles.UseVisualStyleBackColor = true;
             chkCleanupCacheFiles.CheckedChanged += ChkCleanupCacheFiles_CheckedChanged;
-            //
+            // 
             // btnSelectAll
-            //
+            // 
             btnSelectAll.BackColor = Color.FromArgb(30, 40, 60);
             btnSelectAll.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnSelectAll.FlatStyle = FlatStyle.Flat;
@@ -147,9 +147,9 @@ namespace DesinstalaPhotoshop.UI
             btnSelectAll.Text = "Seleccionar Todo";
             btnSelectAll.UseVisualStyleBackColor = false;
             btnSelectAll.Click += BtnSelectAll_Click;
-            //
+            // 
             // btnDeselectAll
-            //
+            // 
             btnDeselectAll.BackColor = Color.FromArgb(30, 40, 60);
             btnDeselectAll.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnDeselectAll.FlatStyle = FlatStyle.Flat;
@@ -161,44 +161,44 @@ namespace DesinstalaPhotoshop.UI
             btnDeselectAll.Text = "Deseleccionar Todo";
             btnDeselectAll.UseVisualStyleBackColor = false;
             btnDeselectAll.Click += BtnDeselectAll_Click;
-            //
+            // 
             // btnOK
-            //
+            // 
             btnOK.BackColor = Color.FromArgb(30, 40, 60);
             btnOK.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnOK.FlatStyle = FlatStyle.Flat;
             btnOK.ForeColor = Color.White;
-            btnOK.Location = new Point(289, 277);
+            btnOK.Location = new Point(289, 302);
             btnOK.Name = "btnOK";
             btnOK.Size = new Size(90, 30);
             btnOK.TabIndex = 8;
             btnOK.Text = "Aceptar";
             btnOK.UseVisualStyleBackColor = false;
             btnOK.Click += BtnOK_Click;
-            //
+            // 
             // btnCancel
-            //
+            // 
             btnCancel.BackColor = Color.FromArgb(30, 40, 60);
             btnCancel.DialogResult = DialogResult.Cancel;
             btnCancel.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.ForeColor = Color.White;
-            btnCancel.Location = new Point(188, 277);
+            btnCancel.Location = new Point(188, 302);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(90, 30);
             btnCancel.TabIndex = 9;
             btnCancel.Text = "Cancelar";
             btnCancel.UseVisualStyleBackColor = false;
             btnCancel.Click += BtnCancel_Click;
-            //
+            // 
             // CleanupOptionsForm
-            //
+            // 
             AcceptButton = btnOK;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(20, 30, 45);
             CancelButton = btnCancel;
-            ClientSize = new Size(400, 319);
+            ClientSize = new Size(400, 345);
             Controls.Add(btnCancel);
             Controls.Add(btnOK);
             Controls.Add(btnDeselectAll);
@@ -213,6 +213,7 @@ namespace DesinstalaPhotoshop.UI
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
+            MinimumSize = new Size(416, 384);
             Name = "CleanupOptionsForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Opciones de Limpieza";

@@ -5,6 +5,22 @@
     {
       "AbsoluteMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|c:\\mirepo\\dpui3\\desinstalaphotoshop.ui\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|solutionrelative:desinstalaphotoshop.ui\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|C:\\MiRepo\\DPui3\\desinstalaphotoshop.ui\\cleanupoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|solutionrelative:desinstalaphotoshop.ui\\cleanupoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|C:\\MiRepo\\DPui3\\desinstalaphotoshop.ui\\restorebackupform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|solutionrelative:desinstalaphotoshop.ui\\restorebackupform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|C:\\MiRepo\\DPui3\\desinstalaphotoshop.ui\\testmodeoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|solutionrelative:desinstalaphotoshop.ui\\testmodeoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|C:\\MiRepo\\DPui3\\desinstalaphotoshop.ui\\uninstalloptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{C0AB9F9E-409F-439B-BB05-B44E0A9ACFB9}|DesinstalaPhotoshop.UI\\DesinstalaPhotoshop.UI.csproj|solutionrelative:desinstalaphotoshop.ui\\uninstalloptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -27,6 +43,50 @@
             {
               "$type": "Bookmark",
               "Name": "ST:1:0:{7f40df72-066b-4810-a08b-c0fbed76c948}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UninstallOptionsForm.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\UninstallOptionsForm.cs",
+              "RelativeDocumentMoniker": "DesinstalaPhotoshop.UI\\UninstallOptionsForm.cs",
+              "ToolTip": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\UninstallOptionsForm.cs [Dise\u00F1o]",
+              "RelativeToolTip": "DesinstalaPhotoshop.UI\\UninstallOptionsForm.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T18:09:48.155Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "TestModeOptionsForm.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\TestModeOptionsForm.cs",
+              "RelativeDocumentMoniker": "DesinstalaPhotoshop.UI\\TestModeOptionsForm.cs",
+              "ToolTip": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\TestModeOptionsForm.cs [Dise\u00F1o]",
+              "RelativeToolTip": "DesinstalaPhotoshop.UI\\TestModeOptionsForm.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T18:09:43.399Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RestoreBackupForm.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\RestoreBackupForm.cs",
+              "RelativeDocumentMoniker": "DesinstalaPhotoshop.UI\\RestoreBackupForm.cs",
+              "ToolTip": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\RestoreBackupForm.cs [Dise\u00F1o]",
+              "RelativeToolTip": "DesinstalaPhotoshop.UI\\RestoreBackupForm.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T18:09:36.527Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CleanupOptionsForm.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\CleanupOptionsForm.cs",
+              "RelativeDocumentMoniker": "DesinstalaPhotoshop.UI\\CleanupOptionsForm.cs",
+              "ToolTip": "C:\\MiRepo\\DPui3\\DesinstalaPhotoshop.UI\\CleanupOptionsForm.cs [Dise\u00F1o]",
+              "RelativeToolTip": "DesinstalaPhotoshop.UI\\CleanupOptionsForm.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-15T18:07:20.717Z"
             },
             {
               "$type": "Document",

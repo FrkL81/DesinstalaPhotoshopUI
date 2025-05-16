@@ -56,15 +56,20 @@ namespace DesinstalaPhotoshop.UI
         // DECISIÓN: Mantener en false para producción. En un entorno de desarrollo real, esto podría ser configurable.
         private readonly bool _developmentMode = false; 
 
-        // Indica si la aplicación se inició con el argumento --elevated
-        private readonly bool _startedElevated = false;
-
+        // Campos para manejar el estado de privilegios
+        private readonly bool _isCurrentlyAdmin = false;      // True si la instancia actual tiene privilegios de admin
+        private readonly bool _justElevatedForDetection = false; // True si esta instancia se acaba de reiniciar específicamente para detección
 
         // Constructor
-        public MainForm(bool startedElevated = false)
+        public MainForm(bool isElevated = false, bool justElevatedForDetection = false)
         {
             InitializeComponent();
-            _startedElevated = startedElevated;
+            
+            // Determinar el estado real de administrador
+            _isCurrentlyAdmin = IsElevated();
+            
+            // _justElevatedForDetection solo es true si el argumento específico estaba presente Y AHORA es admin
+            _justElevatedForDetection = justElevatedForDetection && _isCurrentlyAdmin;
 
             // Inicialización de servicios (Inyección de dependencias manual básica)
             _loggingService = new LoggingService(); // LoggingService no tiene dependencias complejas
@@ -84,7 +89,7 @@ namespace DesinstalaPhotoshop.UI
             SetupEventHandlers();
 
             // Loguear estado de inicio
-            _loggingService.LogInfo($"Aplicación iniciada. Elevada por argumento: {_startedElevated}. Privilegios actuales: { (IsElevated() ? "Sí" : "No") }.");
+            _loggingService.LogInfo($"Aplicación iniciada. Admin: {_isCurrentlyAdmin}. Elevada para detección: {_justElevatedForDetection}.");
             if (_developmentMode)
             {
                 _loggingService.LogWarning("MODO DESARROLLO ACTIVO: Las solicitudes de elevación pueden ser omitidas.");
@@ -106,14 +111,42 @@ namespace DesinstalaPhotoshop.UI
                 _loggingService.LogError($"Error al cargar el icono de la aplicación: {ex.Message}");
             }
 
-            this.Text = "DesinstalaPhotoshop";
-             if (_startedElevated && IsElevated() && !this.Text.Contains("(Elevado)"))
-            {
-                this.Text += " (Elevado)";
-            }
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MinimumSize = new Size(1000, 630); 
             this.BackColor = Color.FromArgb(20, 30, 45);
+
+            // Lógica de botón y título basada en privilegios
+            if (_isCurrentlyAdmin)
+            {
+                this.Text = "DesinstalaPhotoshop (Administrador)";
+                btnDetect.Text = "  Detectar";
+                btnDetect.IconChar = FontAwesome.Sharp.IconChar.Search;
+                toolTip.SetToolTip(btnDetect, "Detectar instalaciones de Photoshop en el sistema");
+
+                if (_justElevatedForDetection)
+                {
+                    _loggingService.LogInfo("Privilegios concedidos para detección. Iniciando detección automáticamente...");
+                    // Llamar a la lógica de detección después de que la interfaz de usuario se haya inicializado
+                    this.Shown += async (s, e) => 
+                    {
+                        try
+                        {
+                            await TriggerDetectionProcess();
+                        }
+                        catch (Exception ex)
+                        {
+                            _loggingService.LogError($"Error durante la detección automática: {ex.Message}");
+                        }
+                    };
+                }
+            }
+            else
+            {
+                this.Text = "DesinstalaPhotoshop";
+                btnDetect.Text = "  Privilegios";
+                btnDetect.IconChar = FontAwesome.Sharp.IconChar.ShieldAlt;
+                toolTip.SetToolTip(btnDetect, "Solicitar privilegios de administrador para funciones completas");
+            }
 
             SetupTooltips();
             animationTimer.Tick += AnimationTimer_Tick!;
@@ -289,10 +322,43 @@ namespace DesinstalaPhotoshop.UI
         #region Manejadores de Eventos de Botones Principales
         private async void BtnDetect_Click(object sender, EventArgs e)
         {
+            // Si el botón dice "Privilegios" y no estamos en modo desarrollo, solicitar elevación
+            if (btnDetect.Text.Contains("Privilegios") && !_developmentMode)
+            {
+                _loggingService.LogInfo("Botón 'Privilegios' presionado. Solicitando confirmación para elevación.");
+                var result = CustomMsgBox.Show(
+                    prompt: "La detección de instalaciones de Photoshop requiere privilegios de administrador.\n\n¿Desea reiniciar la aplicación con permisos elevados?",
+                    title: "Privilegios de Administrador Requeridos",
+                    buttons: CustomMessageBoxButtons.YesNo,
+                    icon: CustomMessageBoxIcon.Question,
+                    theme: ThemeSettings.DarkTheme);
+
+                if (result == CustomDialogResult.Yes)
+                {
+                    _loggingService.LogInfo("Usuario aceptó la elevación para detección.");
+                    RequestElevation("--elevated-for-detection");
+                }
+                else
+                {
+                    _loggingService.LogInfo("Usuario canceló la elevación para detección.");
+                }
+                return;
+            }
+
+            // Si llegamos aquí, ya tenemos privilegios o estamos en modo desarrollo
+            await TriggerDetectionProcess();
+        }
+
+        /// <summary>
+        /// Método que contiene la lógica de detección de instalaciones de Photoshop.
+        /// Puede ser llamado tanto desde BtnDetect_Click como desde el constructor cuando se inicia con privilegios.
+        /// </summary>
+        private async Task TriggerDetectionProcess()
+        {
             var installationsResult = await RunOperationAsync(
                 (progress, token) => _detectionService.DetectInstallationsAsync(progress, token),
                 "Detectando Instalaciones",
-                requiresElevation: true // La detección podría necesitar acceso a HKLM o Program Files
+                requiresElevation: !_developmentMode // No requerir elevación en modo desarrollo para facilitar pruebas
             );
 
             if (installationsResult != null)
@@ -310,7 +376,7 @@ namespace DesinstalaPhotoshop.UI
             }
             else
             {
-                 _loggingService.LogWarning("La detección de instalaciones no devolvió resultados (posiblemente cancelada o error previo).");
+                _loggingService.LogWarning("La detección de instalaciones no devolvió resultados (posiblemente cancelada o error previo).");
             }
             UpdateButtonsState();
         }

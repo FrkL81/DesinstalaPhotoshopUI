@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace DesinstalaPhotoshop.UI
@@ -13,15 +14,17 @@ namespace DesinstalaPhotoshop.UI
         {
             // Configuración de la aplicación
             ApplicationConfiguration.Initialize();
-
-            // Aplicar tema oscuro
             Application.SetColorMode(SystemColorMode.Dark);
 
-            // Verificar si la aplicación se inició con el argumento --elevated
-            bool isElevated = Array.Exists(args, arg => arg == "--elevated");
+            // Verificar si la aplicación se inició con los argumentos de elevación
+            bool isElevatedForGeneral = args.Contains("--elevated");
+            bool isElevatedForDetection = args.Contains("--elevated-for-detection");
 
-            // Iniciar la aplicación pasando el estado de elevación
-            Application.Run(new MainForm(isElevated));
+            // Iniciar la aplicación pasando los parámetros de elevación
+            Application.Run(new MainForm(
+                isElevated: isElevatedForGeneral || isElevatedForDetection, 
+                justElevatedForDetection: isElevatedForDetection
+            ));
         }
     }
 }
