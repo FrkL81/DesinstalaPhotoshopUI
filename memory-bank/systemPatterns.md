@@ -16,23 +16,45 @@ Referencia: `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`, `ManualDesarrol
 
 ## 2. Patrones de Diseño Clave
 *   **Patrón de Servicios (Service Layer):**
-    *   La funcionalidad principal se encapsula en servicios especializados (ej. `DetectionService`, `UninstallService`, `CleanupService`, `BackupService`, `LoggingService`, `ProcessService`).
-    *   Estos servicios son instanciados en `MainForm` y utilizados para orquestar las operaciones.
+    *   La funcionalidad principal se encapsula en servicios especializados (ej. `DetectionService`, `UninstallService`, `CleanupService`, `BackupService`, `LoggingService`, `ProcessService`, `ScriptGenerator`).
+    *   Todos los servicios están implementados y funcionales:
+        *   `DetectionService`: Sistema de puntuación heurística y detección mejorada
+        *   `UninstallService`: Soporte multi-desinstalador
+        *   `CleanupService`: Limpieza profunda con programación
+        *   `BackupService`: Sistema de copias de seguridad
+        *   `ProcessService`: Gestión de procesos y servicios
+        *   `LoggingService`: Logging completo
+        *   `FileSystemHelper`: Operaciones con archivos robustas
+        *   `RegistryHelper`: Operaciones con registro mejoradas
+        *   `ScriptGenerator`: Generación de scripts .bat y .ps1
     *   Promueve la separación de responsabilidades y la testeabilidad.
-    *   *Estado Actual:* La UI tiene stubs para llamar a estos servicios; los servicios en Core están por implementarse. `MainForm.cs` actualmente contiene cierta lógica que se migrará a servicios (ej. logging básico, manejo de admin).
+    *   *Estado Actual:* Todos los servicios Core están implementados y funcionando correctamente, integrados con la UI.
 *   **Programación Asíncrona (`async/await`):**
     *   Utilizado para todas las operaciones de larga duración (detección, desinstalación, limpieza, restauración) para mantener la UI responsiva.
-    *   `MainForm.RunOperationAsync` es un método centralizado en la UI para manejar este patrón, incluyendo la gestión de `CancellationTokenSource` y `IProgress<T>`.
+    *   `MainForm.RunOperationAsync` es un método centralizado que:
+        *   Maneja operaciones asíncronas con cancelación
+        *   Implementa `IProgress<ProgressInfo>` para retroalimentación
+        *   Gestiona estados de UI durante operaciones
+        *   Maneja errores y excepciones
+        *   Actualiza logs y UI en tiempo real
     *   Referencia: `ManualDesarrollo/09_Buenas_Practicas_Lecciones.md`, `MainForm.cs`.
 *   **Patrón Observador (implícito con `IProgress<T>` y Eventos):**
-    *   `IProgress<ProgressInfo>` (planificado) se usará para que los servicios del Core reporten el progreso a la UI sin acoplamiento directo.
-    *   Se planea un `LoggingService` con un evento `LogAdded` para que la UI se suscriba y actualice la consola.
-    *   *Estado Actual:* `MainForm.RunOperationAsync` define un `Progress<object>` básico. El logging está directamente en `MainForm.AppendToConsole`.
+    *   `IProgress<ProgressInfo>` se usa para reportar progreso a la UI
+    *   `LoggingService` con evento `LogAdded` implementado
+    *   *Estado Actual:* Sistema de logging completo con UI actualizada en tiempo real
 *   **Patrón Fachada (Facade):**
-    *   Cada servicio del Core actuará como una fachada, simplificando la interfaz para operaciones complejas. Por ejemplo, `CleanupService.CleanupAsync()` orquestará múltiples sub-operaciones (detener procesos, limpiar archivos, limpiar registro).
+    *   Cada servicio del Core funciona como fachada:
+        *   `CleanupService`: Orquesta limpieza de archivos, registro y programación
+        *   `UninstallService`: Maneja múltiples tipos de desinstaladores
+        *   `ProcessService`: Gestiona procesos y servicios
+        *   `BackupService`: Orquesta copias de seguridad
     *   Referencia: `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`.
 *   **Patrón Estrategia (Strategy):**
-    *   Se utilizará implícitamente dentro de los servicios para diferentes métodos de detección (WMI, registro, sistema de archivos) y limpieza (eliminación directa, programación al reinicio, `reg.exe`).
+    *   Implementado en múltiples servicios:
+        *   `DetectionService`: Estrategias de detección (WMI, registro, sistema de archivos)
+        *   `CleanupService`: Estrategias de limpieza (directa, programada, `reg.exe`)
+        *   `UninstallService`: Estrategias de desinstalación (ejecutable, MSI, Creative Cloud)
+        *   `ProcessService`: Estrategias de detención de procesos
     *   Referencia: `ManualDesarrollo/06_Arquitectura_Metodos_Lista.md`, `ManualDesarrollo/07_Codigo_Fuente_Metodos_Clave.md`.
 
 ## 3. Flujos de Datos Principales

@@ -636,42 +636,80 @@ namespace DesinstalaPhotoshop.UI
 
         private async void BtnRestore_Click(object sender, EventArgs e)
         {
-             _loggingService.LogInfo("Iniciando proceso de restauración de backup...");
-            using (var restoreForm = new RestoreBackupForm()) // RestoreBackupForm maneja su propia lógica de elevación si es necesario.
+            _loggingService.LogInfo("Iniciando proceso de restauración de backup...");
+
+            // Verificar permisos ANTES de crear el formulario RestoreBackupForm
+            if (!_isCurrentlyAdmin)
             {
+                _loggingService.LogWarning("La restauración de backups requiere privilegios de administrador.");
+                CustomMsgBox.Show(
+                    prompt: "La restauración de copias de seguridad requiere privilegios de administrador. Por favor, reinicie la aplicación como administrador.",
+                    title: "Privilegios Insuficientes",
+                    buttons: CustomMessageBoxButtons.OK,
+                    icon: CustomMessageBoxIcon.Warning,
+                    theme: ThemeSettings.DarkTheme);
+                return;
+            }
+
+            // Ahora que sabemos que somos admin (o estamos en modo desarrollo sin el chequeo), podemos proceder
+            using (var restoreForm = new RestoreBackupForm()) 
+            {
+                // Añadir una verificación por si acaso se dispone por otra razón
+                if (restoreForm.IsDisposed)
+                {
+                    _loggingService.LogError("RestoreBackupForm fue dispuesto inesperadamente antes de ShowDialog.");
+                    CustomMsgBox.Show(
+                        prompt: "No se pudo abrir el diálogo de restauración porque ya fue cerrado.",
+                        title: "Error de Diálogo",
+                        buttons: CustomMessageBoxButtons.OK,
+                        icon: CustomMessageBoxIcon.Error,
+                        theme: ThemeSettings.DarkTheme);
+                    return;
+                }
+
                 if (restoreForm.ShowDialog(this) == DialogResult.OK)
                 {
-                    string backupIdToRestore = Path.GetFileName(restoreForm.SelectedBackupPath); // Suponiendo que el ID es el nombre de la carpeta/archivo sin extensión. Ajustar si es necesario.
-                    if (string.IsNullOrEmpty(backupIdToRestore))
+                    string backupPathToRestore = restoreForm.SelectedBackupPath;
+                    if (string.IsNullOrEmpty(backupPathToRestore))
                     {
-                        _loggingService.LogError("No se seleccionó un ID de backup válido para restaurar.");
+                        _loggingService.LogError("No se seleccionó una ruta de backup válida para restaurar.");
+                        CustomMsgBox.Show(
+                            prompt: "No se seleccionó una copia de seguridad válida para restaurar.",
+                            title: "Selección Requerida",
+                            buttons: CustomMessageBoxButtons.OK,
+                            icon: CustomMessageBoxIcon.Warning,
+                            theme: ThemeSettings.DarkTheme);
                         return;
                     }
                     
-                    _loggingService.LogInfo($"ID de backup seleccionado para restaurar: {backupIdToRestore}");
+                    _loggingService.LogInfo($"Ruta de backup seleccionada para restaurar: {backupPathToRestore}");
+                    
+                    // El backupId para el servicio BackupService es el nombre de la carpeta
+                    string backupId = Path.GetFileName(backupPathToRestore);
 
                     var restoreOpResult = await RunOperationAsync(
-                        (progress, token) => _backupService.RestoreBackupAsync(backupIdToRestore, progress, token),
-                        $"Restaurando Backup {backupIdToRestore}",
+                        (progress, token) => _backupService.RestoreBackupAsync(backupId, progress, token),
+                        $"Restaurando Backup {backupId}",
                         requiresElevation: true
                     );
                      if (restoreOpResult != null)
                     {
                         if (restoreOpResult.Success)
                         {
-                            _loggingService.LogInfo($"Restauración del backup '{backupIdToRestore}' completada: {restoreOpResult.Message}");
-                            _loggingService.LogInfo("Refrescando lista de instalaciones después de la restauración...");
-                            await Task.Delay(1000); 
-                            BtnDetect_Click(sender, e);
+                            _loggingService.LogInfo($"Restauración del backup '{backupId}' completada: {restoreOpResult.Message}");
+                            // _loggingService.LogInfo("Refrescando lista de instalaciones después de la restauración..."); // Ya se hace en UpdateButtonsState
+                            // await Task.Delay(1000); 
+                            // BtnDetect_Click(sender, e); // No llamar recursivamente, sino actualizar estado.
+                            await TriggerDetectionProcess(); // Usar el método de detección dedicado
                         }
                         else
                         {
-                            _loggingService.LogError($"Error durante la restauración del backup '{backupIdToRestore}': {restoreOpResult.ErrorMessage} - {restoreOpResult.Message}");
+                            _loggingService.LogError($"Error durante la restauración del backup '{backupId}': {restoreOpResult.ErrorMessage} - {restoreOpResult.Message}");
                         }
                     }
                      else
                     {
-                         _loggingService.LogWarning($"La operación de restauración para el backup '{backupIdToRestore}' no devolvió un resultado.");
+                         _loggingService.LogWarning($"La operación de restauración para el backup '{backupId}' no devolvió un resultado (posiblemente cancelada o error previo).");
                      }
                 }
                 else

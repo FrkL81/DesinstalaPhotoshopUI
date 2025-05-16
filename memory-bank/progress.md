@@ -1,7 +1,15 @@
 # Progress: DesinstalaPhotoshop
 
 ## 1. Resumen General del Progreso
-El proyecto DesinstalaPhotoshop ha completado la **Etapa 1 (Interfaz de Usuario)**, la **Etapa 2 (Detección de Instalaciones)** y la **Etapa 3 (Limpieza/Desinstalación)**. La estructura general de la aplicación, la configuración del proyecto, el diseño visual del formulario principal y la creación de formularios secundarios están listos. La integración de librerías para iconos y diálogos personalizados también se ha realizado con éxito, aunque queda pendiente actualizar el formulario `RestoreBackupForm` para usar `CustomMsgBox`.
+El proyecto DesinstalaPhotoshop ha completado las **Etapas 1-4** (Interfaz de Usuario, Detección de Instalaciones, Limpieza/Desinstalación, y Funcionalidades Avanzadas). La estructura general de la aplicación, la configuración del proyecto, el diseño visual del formulario principal y la creación de formularios secundarios están listos. La integración de librerías para iconos y diálogos personalizados también se ha realizado con éxito, aunque queda pendiente actualizar el formulario `RestoreBackupForm` para usar `CustomMsgBox`.
+
+Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc. También se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
+
+Se ha completado la implementación del servicio de limpieza (`CleanupService`), el servicio de desinstalación (`UninstallService`), el servicio de procesos (`ProcessService`) y el servicio de copias de seguridad (`BackupService`). Estos servicios permiten realizar operaciones de limpieza y desinstalación de manera segura y eficaz, con soporte para diferentes tipos de desinstaladores, creación y restauración de copias de seguridad, y detención de procesos y servicios de Adobe antes de realizar operaciones destructivas.
+
+Se ha completado la implementación del generador de scripts (`ScriptGenerator`) que permite crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell). También se han realizado mejoras en la interfaz de usuario, como la implementación de emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas, la mejora de las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario, y la corrección del desbordamiento de texto en el panel central.
+
+La **Etapa 5 (Pruebas y Optimización)** es la próxima fase crítica, seguida por la **Etapa 6 (Documentación y Distribución)** que tiene una base sólida con la documentación existente en `ManualDesarrollo/` y la configuración para la publicación lista.
 
 Se ha implementado un sistema de puntuación heurística completo que permite clasificar las instalaciones detectadas como instalaciones principales, posibles instalaciones principales o residuos, según diversos criterios como la presencia de ejecutables, desinstaladores válidos, ubicaciones de instalación, etc. También se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
 
@@ -38,67 +46,31 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
         *   Implementación del sistema de puntuación heurística con los métodos `EnrichInstallationInfoAsync` y `ClassifyInstallation`.
         *   Integración de los criterios de puntuación propuestos en `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md`.
         *   Conexión de la lógica de clasificación con la actualización de la UI en `MainForm`.
+*   **Etapa 3: Limpieza y Desinstalación**
+    *   **Fase 3.1 (COMPLETADA):** Implementación completa de `CleanupService` con soporte para limpieza de archivos temporales, entradas del registro, archivos de configuración y caché.
+    *   **Fase 3.2 (COMPLETADA):** Implementación completa de `UninstallService` con soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual).
+    *   **Fase 3.3 (COMPLETADA):** Implementación completa de `ProcessService` para detener procesos y servicios de Adobe antes de operaciones destructivas.
+    *   **Fase 3.4 (COMPLETADA):** Implementación completa de `BackupService` para crear y restaurar copias de seguridad.
 *   **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core**
     *   **Fase 4.1 (COMPLETADA):** Manejadores de eventos para botones en `MainForm.cs` están definidos y funcionan correctamente. Método `RunOperationAsync` para operaciones asíncronas implementado con soporte para cancelación y progreso. Logging completo a la consola de UI. Se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones.
+    *   **Fase 4.2 (COMPLETADA):** Implementación completa del `ScriptGenerator` para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell).
     *   **Fase 4.3 (Parcial):** Funciones para `IsRunningAsAdmin` y `RequestElevatedPermissions` en `MainForm.cs`. `app.manifest` configurado para `asInvoker` (desarrollo).
 *   **Etapa 6: Documentación y Distribución**
     *   **Fase 6.1 (Parcial):** Existe un extenso conjunto de documentos en `ManualDesarrollo/`. Requieren actualización a medida que el desarrollo avanza.
     *   **Fase 6.2 (Parcial):** Configuración de publicación (`dotnet publish` y propiedades en `.csproj`) está definida.
 
 ## 3. Tareas Pendientes Principales
-*   **Etapa 2: Detección de Instalaciones (COMPLETADA)**
-    *   ✅ Implementar `LoggingService` como primer paso para facilitar el desarrollo y depuración.
-    *   ✅ Implementar modelos de datos completos en `DesinstalaPhotoshop.Core/Models/` (`LogLevel`, `ProgressInfo`, `PhotoshopInstallation`, `OperationResult`, `InstallationType`).
-    *   ✅ Implementar `DetectionService` completo:
-        *   ✅ Estructura básica y métodos principales definidos.
-        *   ✅ Implementar los servicios auxiliares:
-            *   ✅ `FileSystemHelper`: Implementado con métodos para verificar existencia de archivos/directorios y eliminarlos con reintentos
-            *   ✅ `RegistryHelper`: Implementado con métodos para acceder, verificar y manipular claves del registro
-        *   ✅ Implementar el método `DetectFromRegistry` con detección mejorada que busca en:
-            *   Claves de desinstalación
-            *   Claves específicas de Adobe Photoshop
-            *   Asociaciones de archivos
-        *   ✅ Implementar los métodos `DetectFromInstalledPrograms` y `DetectFromFileSystem`.
-        *   ✅ Completar el sistema de puntuación heurística (`EnrichInstallationInfoAsync`, `ClassifyInstallation`).
-        *   ✅ **PUNTO DE PRUEBA CRÍTICO**: Se ha resuelto el problema con el botón "Detectar", que ahora realiza correctamente la detección de instalaciones en lugar de solo reiniciar la UI.
-*   **Etapa 3: Limpieza y Desinstalación (COMPLETADA)**
-    *   Implementar `CleanupService`. (COMPLETADO)
-        *   ✅ Estructura básica e interfaz implementadas
-        *   ✅ Integración con el servicio de procesos para detener procesos de Adobe antes de la limpieza
-        *   ✅ Implementación completa de métodos para limpiar archivos temporales, entradas del registro, archivos de configuración y caché
-        *   ✅ Implementación de métodos auxiliares para procesar carpetas en Common Files, intentar eliminar carpetas difíciles y programar la eliminación de archivos persistentes
-    *   Implementar `UninstallService`. (COMPLETADO)
-        *   ✅ Estructura básica e interfaz implementadas
-        *   ✅ Soporte para diferentes tipos de desinstaladores (ejecutable, MSI, Creative Cloud, manual)
-        *   ✅ Integración con el formulario de opciones de desinstalación
-        *   ✅ Integración con el servicio de procesos para detener procesos de Adobe antes de la desinstalación
-        *   ✅ Implementación completa de métodos específicos para ejecutar desinstaladores y eliminar productos MSI
-    *   Implementar los servicios auxiliares restantes:
-        *   `ProcessService`. (COMPLETADO)
-            *   ✅ Detección de procesos de Adobe en ejecución
-            *   ✅ Detención de procesos de Adobe
-            *   ✅ Detención de servicios de Windows relacionados con Adobe
-        *   `BackupService`. (COMPLETADO)
-            *   ✅ Creación de copias de seguridad
-            *   ✅ Restauración de copias de seguridad
-            *   ✅ Gestión de metadatos
-    *   ✅ Ya se han implementado: `FileSystemHelper`, `RegistryHelper`.
-*   **Etapa 4: Funcionalidades Avanzadas y Conexión UI-Core (PARCIALMENTE COMPLETADA)**
-    *   ✅ Fase 4.1: Conectar la lógica real del Core a los manejadores de eventos de `MainForm`. Refinar `RunOperationAsync` y el manejo de `IProgress<ProgressInfo>`. (COMPLETADA)
-    *   ✅ Fase 4.2: Implementar `ScriptGenerator` y la funcionalidad del botón `btnGenerarScript`. (COMPLETADA)
-        *   ✅ Generación de scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell)
-        *   ✅ Extracción de comandos reg delete del texto de la consola
-        *   ✅ Conversión de comandos reg.exe a PowerShell para scripts .ps1
-        *   ✅ Diálogo para que el usuario elija el formato del script y la ubicación donde guardarlo
-        *   ✅ Opción para abrir el script generado con la aplicación predeterminada
-    *   Completar Fase 4.3: Finalizar la lógica de privilegios y asegurar que `app.manifest` se cambie a `requireAdministrator` para producción.
-    *   ✅ Mejoras adicionales en la UI:
-        *   ✅ Mejora de las animaciones de progreso para proporcionar retroalimentación visual inmediata al usuario
-        *   ✅ Corrección del desbordamiento de texto en el panel central
-        *   ✅ Implementación de emojis en el DataGrid para diferenciar visualmente los tipos de instalaciones detectadas
-*   **Etapa 5: Pruebas y Optimización (TODO)**
-    *   Todas las fases.
-*   **Etapa 1 / Mantenimiento:**
+*   **Etapa 5: Pruebas y Optimización**
+    *   **Fase 5.1:** Desarrollar pruebas unitarias para servicios Core.
+    *   **Fase 5.2:** Realizar pruebas de integración UI-Core.
+    *   **Fase 5.3:** Realizar pruebas de rendimiento y estabilidad.
+    *   **Fase 5.4:** Realizar pruebas de usabilidad y experiencia de usuario.
+*   **Etapa 6: Documentación y Distribución**
+    *   **Fase 6.1:** Revisar y actualizar toda la documentación en `ManualDesarrollo/`.
+    *   **Fase 6.2:** Cambiar `app.manifest` a `requireAdministrator` y preparar para publicación.
+    *   **Fase 6.3:** Crear paquetes de instalación y documentación de distribución.
+*   **Mantenimiento de UI:**
+    *   Actualizar `RestoreBackupForm.cs` para usar `CustomMsgBox.Show()` consistentemente.
     *   Revisar todos los formularios secundarios para una completa consistencia con el tema.
     *   Implementar validación de permisos de administrador en todos los formularios que realicen operaciones críticas.
 
@@ -118,11 +90,11 @@ La **Etapa 6 (Documentación y Distribución)** tiene una base sólida con la do
 *   ✅ La lógica de `UpdateButtonsState` en `MainForm` ahora funciona correctamente con la información de `_detectedInstallations` proporcionada por el `DetectionService`.
 *   ✅ El reporte de progreso ahora utiliza el modelo `ProgressInfo` implementado, que proporciona una estructura clara para informar sobre el estado de las operaciones.
 *   ✅ Se ha implementado una versión completa de `ProgressInfo` en el proyecto Core y UI.
-*   El formulario `RestoreBackupForm` necesita ser actualizado para usar `CustomMsgBox` para mantener la consistencia visual en toda la aplicación.
-*   ✅ Se han implementado los servicios auxiliares (`FileSystemHelper`, `RegistryHelper`) necesarios para la funcionalidad de `DetectionService`.
+*   ✅ Se han implementados todos los servicios Core: `DetectionService`, `CleanupService`, `UninstallService`, `ProcessService`, `BackupService`, `LoggingService`, `FileSystemHelper`, `RegistryHelper`.
 *   ✅ Se ha implementado un sistema de puntuación heurística completo para clasificar las instalaciones detectadas, siguiendo las directrices de `ManualDesarrollo/Sistema_Puntuacion_Heuristica.md`.
 *   ✅ Se ha mejorado el método `DetectFromFileSystem` para buscar instalaciones en ubicaciones adicionales, incluyendo AppData, ProgramData y Documents, y detectar residuos en ubicaciones no estándar.
-*   Es necesario implementar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados.
+*   **Problema actual**: El formulario `RestoreBackupForm` necesita ser actualizado para usar `CustomMsgBox` para mantener la consistencia visual en toda la aplicación.
+*   **Problema pendiente**: Necesidad de implementar la integración con el sistema para permitir la ejecución de operaciones que requieren permisos elevados.
 
 ## 5. Historial de Decisiones Clave (implícito o reciente)
 *   **Implementación del generador de scripts**: Se ha decidido implementar el generador de scripts (`ScriptGenerator`) para crear scripts de limpieza en formato .bat (CMD) o .ps1 (PowerShell), permitiendo a los usuarios ejecutar operaciones de limpieza sin necesidad de la aplicación.

@@ -19,6 +19,7 @@ Referencias: `ManualDesarrollo/10_Anexos.md`
 *   **`DesinstalaPhotoshop.Core`:**
     *   `System.Management`: Para WMI (detección de programas instalados, información del sistema). Versión: 9.0.4
     *   `System.ServiceProcess.ServiceController`: Para interactuar con servicios de Windows (detener servicios de Adobe). Versión: 8.0.0
+    *   `System.IO.Compression`: Para operaciones con archivos y compresión de backups
     *   Referencias: `DesinstalaPhotoshop.Core.csproj`, `DesinstalaPhotoshop.Core/obj/project.assets.json`.
 *   **`DesinstalaPhotoshop.UI`:**
     *   `DesinstalaPhotoshop.Core`: Referencia al proyecto de lógica de negocio.
@@ -40,8 +41,10 @@ Referencias: `ManualDesarrollo/03_GUI_Descripcion_Visual.md`, `ManualDesarrollo/
 *   **Manejo de Errores:** Uso de `try-catch` bloques, logging de excepciones.
 *   **Comentarios XML:** Para documentación de API pública en el Core (pendiente de implementar exhaustivamente).
 *   **Separación de Lógica y UI:** La lógica de negocio reside en `DesinstalaPhotoshop.Core`, la UI en `DesinstalaPhotoshop.UI`.
-*   **Logging:** Se planea un `LoggingService`, actualmente implementado de forma básica en `MainForm` con `AppendToConsole`.
-*   **Uso de `CustomMsgBoxLibrary`:** Preferido sobre `MessageBox.Show()` estándar para consistencia estética.
+*   **Logging:** Sistema de logging completo implementado con `LoggingService` y `AppendToConsoleUI`.
+*   **Uso de `CustomMsgBoxLibrary`:** Implementado consistentemente en toda la UI para diálogos modales.
+*   **UI Consistente:** Tema oscuro implementado con `Application.SetColorMode(SystemColorMode.Dark)`.
+*   **Animaciones:** Implementadas para feedback visual en operaciones asíncronas.
 
 Referencias: `ManualDesarrollo/09_Buenas_Practicas_Lecciones.md`, código fuente existente.
 

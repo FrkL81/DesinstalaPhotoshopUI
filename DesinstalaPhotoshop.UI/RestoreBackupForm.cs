@@ -28,20 +28,6 @@ namespace DesinstalaPhotoshop.UI
         public RestoreBackupForm()
         {
             InitializeComponent();
-            
-            if (!IsUserAdministrator())
-            {
-                CustomMsgBox.Show(
-                    prompt: "Se requieren privilegios de administrador para restaurar copias de seguridad.",
-                    title: "Permisos insuficientes",
-                    buttons: CustomMessageBoxButtons.OK,
-                    icon: CustomMessageBoxIcon.Warning,
-                    theme: ThemeSettings.DarkTheme
-                );
-                this.Close();
-                return;
-            }
-            
             SetupForm();
             LoadBackups();
         }

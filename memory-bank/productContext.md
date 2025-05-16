@@ -55,7 +55,10 @@ Referencias: `ManualDesarrollo/02_Objetivos_Proyecto.md`, `ManualDesarrollo/04_G
 
 ## 5. Objetivos de Experiencia de Usuario (UX)
 *   **Claridad:** La interfaz debe presentar la información de forma clara y comprensible, especialmente la distinción entre tipos de instalación.
-*   **Control:** El usuario debe sentir que tiene control sobre las operaciones, con opciones claras y confirmaciones para acciones destructivas.
+*   **UI Consistente:** Tema oscuro implementado con `Application.SetColorMode(SystemColorMode.Dark)`.
+*   **Animaciones:** Implementadas para feedback visual en operaciones asíncronas.
+*   **Emojis en UI:** Utilizados para diferenciar visualmente tipos de instalaciones y estados.
+*   **Tooltips Informativos:** Implementados para explicar funcionalidades y estados.
 *   **Feedback:** Proporcionar feedback constante sobre el estado de las operaciones y el progreso.
 *   **Eficiencia:** Permitir a los usuarios realizar tareas de limpieza profunda de manera más eficiente que los métodos manuales.
 *   **Seguridad:** Transmitir seguridad mediante opciones de copia de seguridad, modo de prueba y mensajes de advertencia claros.
