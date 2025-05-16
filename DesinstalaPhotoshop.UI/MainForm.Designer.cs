@@ -53,10 +53,7 @@ namespace DesinstalaPhotoshop.UI
             panelConsole = new Panel();
             txtConsole = new RichTextBox();
             panelConsoleButtons = new Panel();
-            panelLeftB = new Panel();
             lblAnimatedText = new Label();
-            panelCentralB = new Panel();
-            lblProgress = new Label();
             panelRightB = new Panel();
             progressBar = new ProgressBar();
             btnGenerarScript = new IconButton();
@@ -73,8 +70,6 @@ namespace DesinstalaPhotoshop.UI
             contextMenuDataGrid.SuspendLayout();
             panelConsole.SuspendLayout();
             panelConsoleButtons.SuspendLayout();
-            panelLeftB.SuspendLayout();
-            panelCentralB.SuspendLayout();
             panelRightB.SuspendLayout();
             SuspendLayout();
             // 
@@ -331,8 +326,7 @@ namespace DesinstalaPhotoshop.UI
             // panelConsoleButtons
             // 
             panelConsoleButtons.BackColor = Color.FromArgb(30, 40, 60);
-            panelConsoleButtons.Controls.Add(panelLeftB);
-            panelConsoleButtons.Controls.Add(panelCentralB);
+            panelConsoleButtons.Controls.Add(lblAnimatedText);
             panelConsoleButtons.Controls.Add(panelRightB);
             panelConsoleButtons.Controls.Add(btnGenerarScript);
             panelConsoleButtons.Controls.Add(btnAbrirLog);
@@ -343,44 +337,17 @@ namespace DesinstalaPhotoshop.UI
             panelConsoleButtons.Size = new Size(1000, 70);
             panelConsoleButtons.TabIndex = 1;
             // 
-            // panelLeftB
-            // 
-            panelLeftB.Controls.Add(lblAnimatedText);
-            panelLeftB.Location = new Point(13, 43);
-            panelLeftB.Name = "panelLeftB";
-            panelLeftB.Size = new Size(280, 24);
-            panelLeftB.TabIndex = 5;
-            // 
             // lblAnimatedText
             // 
+            lblAnimatedText.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
             lblAnimatedText.BackColor = Color.Transparent;
-            lblAnimatedText.Dock = DockStyle.Top;
             lblAnimatedText.ForeColor = Color.White;
-            lblAnimatedText.Location = new Point(0, 0);
+            lblAnimatedText.Location = new Point(13, 47);
             lblAnimatedText.Name = "lblAnimatedText";
-            lblAnimatedText.Size = new Size(280, 20);
+            lblAnimatedText.Size = new Size(400, 20);
             lblAnimatedText.TabIndex = 1;
+            lblAnimatedText.Text = "Listo";
             lblAnimatedText.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // panelCentralB
-            // 
-            panelCentralB.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            panelCentralB.Controls.Add(lblProgress);
-            panelCentralB.Location = new Point(300, 43);
-            panelCentralB.Name = "panelCentralB";
-            panelCentralB.Size = new Size(265, 24);
-            panelCentralB.TabIndex = 4;
-            // 
-            // lblProgress
-            // 
-            lblProgress.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            lblProgress.ForeColor = Color.White;
-            lblProgress.Location = new Point(3, 3);
-            lblProgress.Name = "lblProgress";
-            lblProgress.Size = new Size(259, 15);
-            lblProgress.TabIndex = 1;
-            lblProgress.Text = "Operación en curso - 0%";
-            lblProgress.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // panelRightB
             // 
@@ -493,8 +460,6 @@ namespace DesinstalaPhotoshop.UI
             contextMenuDataGrid.ResumeLayout(false);
             panelConsole.ResumeLayout(false);
             panelConsoleButtons.ResumeLayout(false);
-            panelLeftB.ResumeLayout(false);
-            panelCentralB.ResumeLayout(false);
             panelRightB.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -521,7 +486,7 @@ namespace DesinstalaPhotoshop.UI
         private FontAwesome.Sharp.IconButton btnCopyOutput;
         private FontAwesome.Sharp.IconButton btnAbrirLog;
         private FontAwesome.Sharp.IconButton btnGenerarScript;
-        private Label lblProgress;
+
         private ProgressBar progressBar;
         private Label lblInfoText;
         private Label lblAnimatedText;
@@ -530,7 +495,5 @@ namespace DesinstalaPhotoshop.UI
         private ToolStripMenuItem menuItemCopyRow;
         private ToolStripMenuItem menuItemCopyTable;
         private Panel panelRightB;
-        private Panel panelCentralB;
-        private Panel panelLeftB;
     }
 }

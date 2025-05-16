@@ -44,6 +44,7 @@ namespace DesinstalaPhotoshop.UI
         // Estado de la animación de progreso
         private int _animationDots = 0;
         private string _currentOperation = string.Empty;
+        private System.Windows.Forms.Timer postOperationDisplayTimer; // Timer para controlar la visualización post-operación
 
         // Estado de la animación de texto informativo
         private int _textAnimationState = 0;
@@ -87,6 +88,11 @@ namespace DesinstalaPhotoshop.UI
 
             SetupControls();
             SetupEventHandlers();
+
+            // Configurar el timer para la visualización post-operación
+            postOperationDisplayTimer = new System.Windows.Forms.Timer();
+            postOperationDisplayTimer.Interval = 3000; // 3 segundos
+            postOperationDisplayTimer.Tick += PostOperationDisplayTimer_Tick;
 
             // Loguear estado de inicio
             _loggingService.LogInfo($"Aplicación iniciada. Admin: {_isCurrentlyAdmin}. Elevada para detección: {_justElevatedForDetection}.");
@@ -152,7 +158,7 @@ namespace DesinstalaPhotoshop.UI
             animationTimer.Tick += AnimationTimer_Tick!;
             
             // Ocultar controles de progreso inicialmente
-            lblProgress.Visible = false;
+            // lblProgress ha sido eliminado
             progressBar.Visible = false;
             lblAnimatedText.Visible = false;
 
@@ -264,8 +270,11 @@ namespace DesinstalaPhotoshop.UI
                 }
             }
 
-            PrepareUIForOperation(operationName);
+            // Crear el token de cancelación ANTES de preparar la UI
             _cancellationTokenSource = new CancellationTokenSource();
+            
+            // Ahora preparamos la UI, lo que actualizará los botones
+            PrepareUIForOperation(operationName);
             
             // DECISIÓN: Usar Core.Models.ProgressInfo directamente.
             // La UI puede manejar este modelo. La conversión añade una capa innecesaria si los modelos son idénticos.
@@ -312,9 +321,12 @@ namespace DesinstalaPhotoshop.UI
             }
             finally
             {
-                RestoreUI();
+                // Primero, limpiar el token de cancelación
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
+                
+                // Luego, restaurar la UI
+                RestoreUI();
             }
         }
         #endregion
@@ -884,11 +896,16 @@ namespace DesinstalaPhotoshop.UI
             _textAnimationState = 0;
             progressBar.Value = 0;
 
-            lblProgress.Text = $"{_currentOperation} - 0%";
-            lblProgress.Visible = true;
+            // Asegurar que los controles de progreso estén visibles
             progressBar.Visible = true;
-            lblAnimatedText.Text = _animationTexts[0] + "..."; // Mostrar texto inicial de animación
             lblAnimatedText.Visible = true;
+            
+            // Establecer texto inicial
+            lblAnimatedText.Text = $"{_currentOperation} - 0%...";
+            
+            // Forzar actualización de la UI
+            lblAnimatedText.Refresh();
+            progressBar.Refresh();
             
             UpdateButtonsState(); // Esto deshabilitará/habilitará botones según isOperationRunning
             animationTimer.Start();
@@ -897,21 +914,49 @@ namespace DesinstalaPhotoshop.UI
 
         private void RestoreUI()
         {
-            animationTimer.Stop();
-             // Si la operación no se completó al 100% o fue cancelada/errónea, ocultar progreso.
-            // Si se completó al 100% con éxito, progressBar.Value será 100.
-            if (progressBar.Value < 100 || (_cancellationTokenSource !=null && _cancellationTokenSource.IsCancellationRequested) )
+            if (InvokeRequired)
             {
-                lblProgress.Visible = false;
-                progressBar.Visible = false;
-                lblAnimatedText.Visible = false;
-            } else { // Mantenemos visible el 100% completado
-                 lblProgress.Text = $"{_currentOperation} - Completado (100%)";
-                 lblAnimatedText.Text = "Operación finalizada.";
+                Invoke(new Action(RestoreUI));
+                return;
             }
+
+            animationTimer.Stop(); // Detener la animación de "procesando..."
             
+            // Asegurar que los controles de progreso estén visibles
+            progressBar.Visible = true;
+            lblAnimatedText.Visible = true;
+
+            // Determinar el mensaje final
+            string finalMessage = $"{_currentOperation} - Finalizado";
+            
+            if (_cancellationTokenSource != null && _cancellationTokenSource.IsCancellationRequested)
+            {
+                finalMessage = $"{_currentOperation} - Cancelado";
+                if (progressBar.Value < 100) progressBar.Value = 0;
+            }
+            else if (progressBar.Value >= 100)
+            {
+                // Si llegamos al 100%, asumimos éxito
+                finalMessage = $"{_currentOperation} - Completado (100%)";
+            }
+            else
+            {
+                // Si no llegó al 100% y no fue cancelada, considerar como interrumpida
+                finalMessage = $"{_currentOperation} - Interrumpido ({progressBar.Value}%)";
+            }
+
+            // Actualizar el control con el mensaje final
+            lblAnimatedText.Text = finalMessage;
+            
+            // Forzar actualización de la UI
+            lblAnimatedText.Refresh();
+            progressBar.Refresh();
+
             _currentOperation = string.Empty;
             UpdateButtonsState();
+
+            // Iniciar el timer para ocultar los controles
+            postOperationDisplayTimer.Start();
         }
 
         private void UpdateProgress(int percentage, string? statusText)
@@ -928,14 +973,12 @@ namespace DesinstalaPhotoshop.UI
             // Limitar longitud para evitar desbordamiento
             if (currentStatus.Length > 50) currentStatus = currentStatus.Substring(0, 47) + "...";
 
-            lblProgress.Text = $"{currentStatus} - {progressBar.Value}%";
-
-            if (progressBar.Value >= 100)
-            {
-                animationTimer.Stop();
-                lblProgress.Text = $"{currentStatus} - Completado (100%)";
-                lblAnimatedText.Text = "Operación completada."; // Mensaje más genérico, ya que el resultado específico se loguea.
-            }
+            // Actualizar solo el texto animado con el progreso
+            lblAnimatedText.Text = $"{currentStatus} - {progressBar.Value}%";
+            
+            // Forzar actualización de la UI
+            lblAnimatedText.Refresh();
+            progressBar.Refresh();
         }
 
         private void AnimationTimer_Tick(object? sender, EventArgs e)
@@ -950,12 +993,27 @@ namespace DesinstalaPhotoshop.UI
             
             _textAnimationState = (_textAnimationState + 1) % _animationTexts.Length;
             lblAnimatedText.Text = _animationTexts[_textAnimationState] + dots;
+        }
+
+        // Manejador del evento Tick para el timer de visualización post-operación
+        private void PostOperationDisplayTimer_Tick(object? sender, EventArgs e)
+        {
+            // Detener el timer para que solo se ejecute una vez
+            postOperationDisplayTimer.Stop();
+
+            // Ocultar los controles de progreso
+            if (lblAnimatedText.InvokeRequired)
+            {
+                progressBar.Invoke(new Action(() => progressBar.Visible = false));
+                lblAnimatedText.Invoke(new Action(() => lblAnimatedText.Visible = false));
+            }
+            else
+            {
+                progressBar.Visible = false;
+                lblAnimatedText.Visible = false;
+            }
             
-            // El texto de lblProgress ya se actualiza en UpdateProgress,
-            // pero si quisiéramos una animación de puntos también allí:
-            // string operationText = _currentOperation;
-            // if (operationText.Length > 20) operationText = operationText.Substring(0, 17) + "...";
-            // lblProgress.Text = $"{operationText}{dots} - {progressBar.Value}%";
+            _loggingService.LogDebug("Controles de progreso post-operación ocultados.");
         }
 
         private void UpdateInstallationsList()
@@ -1105,30 +1163,37 @@ namespace DesinstalaPhotoshop.UI
 
         private void UpdatePanelInfoLayout()
         {
-            if (panelConsoleButtons == null || progressBar == null || lblAnimatedText == null || lblProgress == null) return;
+            if (panelConsoleButtons == null || progressBar == null || lblAnimatedText == null) return;
             if (!panelConsoleButtons.Visible || panelConsoleButtons.ClientSize.Width <= 0) return;
 
-            int margin = 5;
-            int progressBarWidth = (int)(panelConsoleButtons.ClientSize.Width * 0.35); // 35% para la barra
-            progressBarWidth = Math.Max(100, progressBarWidth); // Ancho mínimo
+            int margin = 10;
+            int buttonAreaHeight = 40; // Altura del área de botones en la parte superior
+            
+            // Tamaño de la barra de progreso (40% del ancho, mínimo 150px)
+            int progressBarWidth = (int)(panelConsoleButtons.ClientSize.Width * 0.40);
+            progressBarWidth = Math.Max(150, progressBarWidth);
+            
+            // Tamaño del texto animado (con más margen a la derecha)
+            int animatedTextWidth = panelConsoleButtons.ClientSize.Width - progressBarWidth - (margin * 4);
+            animatedTextWidth = Math.Max(180, animatedTextWidth); // Reducir mínimo para dar más espacio
 
-            int animatedTextWidth = (int)(panelConsoleButtons.ClientSize.Width * 0.30); // 30% para texto animado
-            animatedTextWidth = Math.Max(100, animatedTextWidth);
+            // Calcular la posición Y para alinear con la barra de progreso
+            int progressY = buttonAreaHeight + ((panelConsoleButtons.Height - buttonAreaHeight - 20) / 2);
+            
+            // Posicionar el texto animado
+            lblAnimatedText.Size = new Size(animatedTextWidth, 20);
+            lblAnimatedText.Location = new Point(
+                margin, 
+                progressY);
 
-            int progressLabelWidth = panelConsoleButtons.ClientSize.Width - progressBarWidth - animatedTextWidth - (margin * 4);
-            progressLabelWidth = Math.Max(100, progressLabelWidth); // Ancho mínimo
-
-            // Posicionar lblAnimatedText a la izquierda
-            lblAnimatedText.Location = new Point(margin, (panelConsoleButtons.ClientSize.Height - lblAnimatedText.Height) / 2);
-            lblAnimatedText.Size = new Size(animatedTextWidth, lblAnimatedText.Height);
-
-            // Posicionar lblProgress en el centro
-            lblProgress.Location = new Point(lblAnimatedText.Right + margin, lblAnimatedText.Top);
-            lblProgress.Size = new Size(progressLabelWidth, lblProgress.Height);
-
-            // Posicionar progressBar a la derecha
-            progressBar.Location = new Point(lblProgress.Right + margin, lblProgress.Top);
-            progressBar.Size = new Size(progressBarWidth, progressBar.Height);
+            // Posicionar la barra de progreso (con más margen a la izquierda)
+            progressBar.Size = new Size(progressBarWidth, 20);
+            progressBar.Location = new Point(
+                Math.Max(panelConsoleButtons.Width - progressBarWidth, lblAnimatedText.Right + (margin * 2)),
+                progressY);
+                
+            // Asegurar que el texto sea visible
+            lblAnimatedText.BringToFront();
         }
         #endregion
 
