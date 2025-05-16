@@ -181,27 +181,36 @@ namespace DesinstalaPhotoshop.UI
 
             if (result == CustomDialogResult.Yes)
             {
+                btnRestore.Enabled = false;
+                btnCancel.Enabled = false;
+                lstBackups.Enabled = false;
+                Cursor = Cursors.WaitCursor;
+
                 try
                 {
-                    btnRestore.Enabled = false;
-                    btnCancel.Enabled = false;
-                    lstBackups.Enabled = false;
-                    Cursor = Cursors.WaitCursor;
-
                     // Crear un directorio temporal para la extracción
                     string tempDir = Path.Combine(Path.GetTempPath(), "DesinstalaPhotoshop_Restore_" + Guid.NewGuid().ToString());
                     Directory.CreateDirectory(tempDir);
 
-                    try
-                    {
-                        // Extraer el archivo ZIP
-                        await Task.Run(() => ZipFile.ExtractToDirectory(SelectedBackupPath, tempDir));
+                    // Extraer el archivo ZIP
+                    await Task.Run(() => ZipFile.ExtractToDirectory(SelectedBackupPath, tempDir));
 
-                        // Restaurar los archivos a sus ubicaciones originales
-                        string manifestPath = Path.Combine(tempDir, "manifest.json");
-                        if (File.Exists(manifestPath))
+                    // Restaurar los archivos a sus ubicaciones originales
+                    string manifestPath = Path.Combine(tempDir, "manifest.json");
+                        if (!File.Exists(manifestPath))
                         {
-                            // Leer y deserializar el archivo manifest.json
+                            CustomMsgBox.Show(
+                                prompt: "El archivo manifest.json no se encontró en el backup. " +
+                                       "Este archivo es necesario para restaurar correctamente la copia de seguridad.",
+                                title: "Archivo Manifest No Encontrado",
+                                buttons: CustomMessageBoxButtons.OK,
+                                icon: CustomMessageBoxIcon.Error,
+                                theme: ThemeSettings.DarkTheme
+                            );
+                            return;
+                        }
+
+                        // Leer y deserializar el archivo manifest.json
                         string manifestContent = await File.ReadAllTextAsync(manifestPath);
                         var backupMetadata = System.Text.Json.JsonSerializer.Deserialize<global::DesinstalaPhotoshop.Core.Models.BackupMetadata>(
                             manifestContent,
@@ -329,41 +338,33 @@ namespace DesinstalaPhotoshop.UI
                                 theme: ThemeSettings.DarkTheme
                             );
                         }
-                        }
-                        else
-                        {
-                            throw new FileNotFoundException("No se encontró el archivo manifest.json en el backup.");
-                        }
-                    }
-                    finally
-                    {
+
                         // Limpiar el directorio temporal
                         if (Directory.Exists(tempDir))
                         {
                             Directory.Delete(tempDir, true);
                         }
-                    }
 
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                catch (Exception ex)
-                {
-                    CustomMsgBox.Show(
-                        prompt: $"Error al restaurar la copia de seguridad: {ex.Message}",
-                        title: "Error",
-                        buttons: CustomMessageBoxButtons.OK,
-                        icon: CustomMessageBoxIcon.Error,
-                        theme: ThemeSettings.DarkTheme
-                    );
-                }
-                finally
-                {
-                    btnRestore.Enabled = true;
-                    btnCancel.Enabled = true;
-                    lstBackups.Enabled = true;
-                    Cursor = Cursors.Default;
-                }
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        CustomMsgBox.Show(
+                            prompt: $"Error al restaurar la copia de seguridad: {ex.Message}",
+                            title: "Error",
+                            buttons: CustomMessageBoxButtons.OK,
+                            icon: CustomMessageBoxIcon.Error,
+                            theme: ThemeSettings.DarkTheme
+                        );
+                    }
+                    finally
+                    {
+                        btnRestore.Enabled = true;
+                        btnCancel.Enabled = true;
+                        lstBackups.Enabled = true;
+                        Cursor = Cursors.Default;
+                    }
             }
         }
 
