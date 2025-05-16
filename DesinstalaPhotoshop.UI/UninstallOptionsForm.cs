@@ -56,10 +56,17 @@ namespace DesinstalaPhotoshop.UI
         /// </summary>
         public bool WhatIfMode => _whatIfMode;
 
-        public UninstallOptionsForm()
+        public UninstallOptionsForm(bool isSimulationContext = false)
         {
             InitializeComponent();
             SetupForm();
+            
+            if (isSimulationContext)
+            {
+                chkWhatIfMode.Checked = true;
+                chkWhatIfMode.Enabled = false; // Bloquear el checkbox
+                _whatIfMode = true;
+            }
         }
 
         private void SetupForm()

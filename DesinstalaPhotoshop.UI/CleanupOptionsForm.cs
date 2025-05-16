@@ -66,10 +66,17 @@ namespace DesinstalaPhotoshop.UI
         /// </summary>
         public bool CleanupCacheFiles => _cleanupCacheFiles;
 
-        public CleanupOptionsForm()
+        public CleanupOptionsForm(bool isSimulationContext = false)
         {
             InitializeComponent();
             SetupForm();
+            
+            if (isSimulationContext)
+            {
+                chkWhatIfMode.Checked = true;
+                chkWhatIfMode.Enabled = false; // Bloquear el checkbox
+                _whatIfMode = true;
+            }
         }
 
         private void SetupForm()

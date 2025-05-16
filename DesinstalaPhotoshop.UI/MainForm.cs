@@ -553,16 +553,15 @@ namespace DesinstalaPhotoshop.UI
                                 CustomMsgBox.Show("Seleccione una instalación para simular la desinstalación.", "Selección Requerida", CustomMessageBoxButtons.OK, CustomMessageBoxIcon.Warning, theme: ThemeSettings.DarkTheme);
                                 return;
                             }
-                            using (var uninstallOptsForm = new UninstallOptionsForm())
+                            using (var uninstallOptsForm = new UninstallOptionsForm(isSimulationContext: true))
                             {
-                                // Forzar modo simulación y deshabilitar checkbox
                                 if (uninstallOptsForm.ShowDialog(this) == DialogResult.OK)
                                 {
                                     await RunOperationAsync(
                                         (progress, token) => _uninstallService.UninstallAsync(
                                             selectedInstallation,
                                             uninstallOptsForm.CreateBackup,
-                                            true, // Forzar WhatIf
+                                            uninstallOptsForm.WhatIfMode, // Usar el valor del formulario (ya debería ser true)
                                             uninstallOptsForm.RemoveUserData,
                                             uninstallOptsForm.RemoveSharedComponents,
                                             progress,
@@ -580,16 +579,15 @@ namespace DesinstalaPhotoshop.UI
                                 CustomMsgBox.Show("Seleccione un elemento residual para simular la limpieza.", "Selección Requerida", CustomMessageBoxButtons.OK, CustomMessageBoxIcon.Warning, theme: ThemeSettings.DarkTheme);
                                 return;
                             }
-                            using (var cleanupOptsForm = new CleanupOptionsForm())
+                            using (var cleanupOptsForm = new CleanupOptionsForm(isSimulationContext: true))
                             {
-                                // Forzar modo simulación y deshabilitar checkbox
                                 if (cleanupOptsForm.ShowDialog(this) == DialogResult.OK)
                                 {
                                     await RunOperationAsync(
                                         (progress, token) => _cleanupService.CleanupAsync(
                                             selectedInstallation,
                                             cleanupOptsForm.CreateBackup,
-                                            true, // Forzar WhatIf
+                                            cleanupOptsForm.WhatIfMode, // Usar el valor del formulario (ya debería ser true)
                                             cleanupOptsForm.CleanupTempFiles,
                                             cleanupOptsForm.CleanupRegistry,
                                             cleanupOptsForm.CleanupConfigFiles,
