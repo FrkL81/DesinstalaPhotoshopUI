@@ -138,6 +138,7 @@ namespace DesinstalaPhotoshop.UI
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
+            MinimumSize = new Size(516, 419);
             Name = "RestoreBackupForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Restaurar Copia de Seguridad";

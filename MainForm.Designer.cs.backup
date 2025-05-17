@@ -331,11 +331,6 @@ namespace DesinstalaPhotoshop.UI
             panelConsoleButtons.Controls.Add(btnGenerarScript);
             panelConsoleButtons.Controls.Add(btnAbrirLog);
             panelConsoleButtons.Controls.Add(btnCopyOutput);
-            panelConsoleButtons.Controls.Add(btnAbout);
-            panelConsoleButtons.Controls.SetChildIndex(btnAbout, 3);
-            panelConsoleButtons.Controls.SetChildIndex(btnCopyOutput, 2);
-            panelConsoleButtons.Controls.SetChildIndex(btnAbrirLog, 1);
-            panelConsoleButtons.Controls.SetChildIndex(btnGenerarScript, 0);
             panelConsoleButtons.Dock = DockStyle.Bottom;
             panelConsoleButtons.Location = new Point(0, 224);
             panelConsoleButtons.Name = "panelConsoleButtons";
@@ -429,27 +424,6 @@ namespace DesinstalaPhotoshop.UI
             btnCopyOutput.Text = "  Copiar";
             btnCopyOutput.TextImageRelation = TextImageRelation.ImageBeforeText;
             btnCopyOutput.UseVisualStyleBackColor = false;
-            // 
-            // btnAbout
-            // 
-            btnAbout.BackColor = Color.FromArgb(30, 40, 60);
-            btnAbout.FlatAppearance.BorderColor = Color.FromArgb(60, 70, 90);
-            btnAbout.FlatAppearance.BorderSize = 0;
-            btnAbout.FlatStyle = FlatStyle.Flat;
-            btnAbout.ForeColor = Color.White;
-            btnAbout.IconChar = IconChar.InfoCircle;
-            btnAbout.IconColor = Color.White;
-            btnAbout.IconFont = IconFont.Auto;
-            btnAbout.IconSize = 20;
-            btnAbout.Location = new Point(390, 4);
-            btnAbout.Name = "btnAbout";
-            btnAbout.Size = new Size(120, 32);
-            btnAbout.TabIndex = 3;
-            btnAbout.Text = "  Acerca de...";
-            btnAbout.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btnAbout.UseVisualStyleBackColor = false;
-            btnAbout.Enabled = true;
-            btnAbout.Visible = true;
             // 
             // lblInfoText
             // 

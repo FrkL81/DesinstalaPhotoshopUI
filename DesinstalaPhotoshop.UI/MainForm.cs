@@ -37,6 +37,9 @@ namespace DesinstalaPhotoshop.UI
 
         // Lista de instalaciones detectadas (usando el modelo del Core)
         private List<PhotoshopInstallation> _detectedInstallations = new List<PhotoshopInstallation>();
+        
+        // Botones
+        private FontAwesome.Sharp.IconButton btnAbout = new FontAwesome.Sharp.IconButton();
 
         // Token de cancelación para operaciones asíncronas
         private CancellationTokenSource? _cancellationTokenSource;
@@ -91,7 +94,7 @@ namespace DesinstalaPhotoshop.UI
 
             // Configurar el timer para la visualización post-operación
             postOperationDisplayTimer = new System.Windows.Forms.Timer();
-            postOperationDisplayTimer.Interval = 3000; // 3 segundos
+            postOperationDisplayTimer.Interval = 5000; // 5 segundos
             postOperationDisplayTimer.Tick += PostOperationDisplayTimer_Tick;
 
             // Loguear estado de inicio
@@ -154,6 +157,13 @@ namespace DesinstalaPhotoshop.UI
                 toolTip.SetToolTip(btnDetect, "Solicitar privilegios de administrador para funciones completas");
             }
 
+            // Inicializar botón About
+            btnAbout.Visible = true;
+            btnAbout.Enabled = true;
+            btnAbout.Text = "  Acerca de...";
+            btnAbout.IconChar = FontAwesome.Sharp.IconChar.InfoCircle;
+            toolTip.SetToolTip(btnAbout, "Mostrar información sobre la aplicación");
+
             SetupTooltips();
             animationTimer.Tick += AnimationTimer_Tick!;
             
@@ -179,6 +189,7 @@ namespace DesinstalaPhotoshop.UI
             btnCopyOutput.Click += BtnCopyOutput_Click!;
             btnAbrirLog.Click += BtnAbrirLog_Click!;
             btnGenerarScript.Click += BtnGenerarScript_Click!;
+            btnAbout.Click += BtnAbout_Click!;
 
             lstInstallations.SelectedIndexChanged += LstInstallations_SelectedIndexChanged!;
             contextMenuDataGrid.Opening += ContextMenuDataGrid_Opening;
@@ -208,6 +219,7 @@ namespace DesinstalaPhotoshop.UI
             toolTip.SetToolTip(btnCopyOutput, "Copiar el contenido de la consola al portapapeles");
             toolTip.SetToolTip(btnAbrirLog, "Abrir la carpeta de logs de esta aplicación");
             toolTip.SetToolTip(btnGenerarScript, "Generar script de limpieza basado en los comandos de la consola");
+            toolTip.SetToolTip(btnAbout, "Mostrar información sobre la aplicación");
         }
 
         #region Lógica de Privilegios
@@ -339,7 +351,7 @@ namespace DesinstalaPhotoshop.UI
             {
                 _loggingService.LogInfo("Botón 'Privilegios' presionado. Solicitando confirmación para elevación.");
                 var result = CustomMsgBox.Show(
-                    prompt: "La detección de instalaciones de Photoshop requiere privilegios de administrador.\n\n¿Desea reiniciar la aplicación con permisos elevados?",
+                    prompt: "Se requiere privilegios de administrador para detectar instalaciones de \n ▷Photoshop◁ \n\n ¿Desea reiniciar la aplicación con permisos elevados?",
                     title: "Privilegios de Administrador Requeridos",
                     buttons: CustomMessageBoxButtons.YesNo,
                     icon: CustomMessageBoxIcon.Question,
@@ -634,6 +646,15 @@ namespace DesinstalaPhotoshop.UI
             }
         }
 
+        private void BtnAbout_Click(object sender, EventArgs e)
+        {
+            _loggingService.LogInfo("Mostrando formulario 'Acerca de...'.");
+            using (var aboutForm = new AboutForm())
+            {
+                aboutForm.ShowDialog(this);
+            }
+        }
+
         private async void BtnRestore_Click(object sender, EventArgs e)
         {
             _loggingService.LogInfo("Iniciando proceso de restauración de backup...");
@@ -881,6 +902,7 @@ namespace DesinstalaPhotoshop.UI
 
             // Botones de consola
             btnCopyOutput.Enabled = !isOperationRunning && !string.IsNullOrEmpty(txtConsole.Text);
+            btnAbout.Enabled = !isOperationRunning;
             btnAbrirLog.Enabled = !isOperationRunning;
             btnGenerarScript.Enabled = !isOperationRunning && txtConsole.Text.Contains("reg delete", StringComparison.OrdinalIgnoreCase);
             

@@ -71,10 +71,10 @@ Las dependencias y propiedades del proyecto se definirán según lo especificado
     *   ✅ Establecer un tema por defecto para `CustomMsgBox` coherente con el tema oscuro.
 *   **Revisar**: `ManualDesarrollo/recursos/CustomMsgBoxLibrary.md` (API, personalización), `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md` (uso en la aplicación).
 
-#### Fase 1.4: Formularios Secundarios ⚠️**PARCIALMENTE COMPLETADA**
+#### Fase 1.4: Formularios Secundarios ✅**COMPLETADA**
 *   **Tareas**:
     *   ✅ Implementar los formularios `TestModeOptionsForm`, `UninstallOptionsForm`, `CleanupOptionsForm`, y `RestoreBackupForm` según la descripción en `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md`.
-    *   ⏳ **Pendiente**: Actualizar `RestoreBackupForm.cs` para usar `CustomMsgBox.Show()` en lugar de `MessageBox.Show()` para los mensajes de error y confirmación (actualmente `RestoreBackupForm` usa `CustomMsgBox` en algunos puntos pero no consistentemente para todos los mensajes como `MessageBox.Show($"Error al cargar los backups: {ex.Message}"...`).
+    *   ✅ **Pendiente**: Actualizar `RestoreBackupForm.cs` para usar `CustomMsgBox.Show()` en lugar de `MessageBox.Show()` para los mensajes de error y confirmación (actualmente `RestoreBackupForm` usa `CustomMsgBox` en algunos puntos pero no consistentemente para todos los mensajes como `MessageBox.Show($"Error al cargar los backups: {ex.Message}"...`).
 *   **Revisar**: `ManualDesarrollo/04_GUI_Funcionalidad_Controles.md` (propósito y controles de cada formulario).
 
 ### Etapa 2: Detección de Instalaciones ✅ **COMPLETADA**

@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="FontAwesome.Sharp" Version="6.6.0" />
+    <!-- Comentado por incompatibilidad con .NET 9.0 -->
+    <!-- <PackageReference Include="AutoHotkey.Interop" Version="1.0.0.1" /> -->
   </ItemGroup>
 
   <ItemGroup>
